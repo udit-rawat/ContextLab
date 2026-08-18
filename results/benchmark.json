@@ -1,0 +1,438 @@
+{
+  "generatedAt": "2026-08-18T14:46:38.377Z",
+  "answerModel": "gemini-3.1-flash-lite",
+  "judgeModel": "openai/gpt-oss-120b",
+  "embedModel": "gemini-embedding-001",
+  "corpusCommit": "66b2c5a9b5ddf65f218423072ad158e42ed780aa",
+  "corpusTokens": 183648,
+  "contextTokenCap": 128000,
+  "rows": [
+    {
+      "questionId": "q-seed-1",
+      "question": "How does FastAPI resolve and inject dependencies for a route?",
+      "type": "cross-file",
+      "strategy": "full-stuff",
+      "contextTokens": 125917,
+      "promptTokens": 126048,
+      "outputTokens": 289,
+      "costUsd": 0.0319455,
+      "latencyMs": 33372,
+      "answer": "FastAPI resolves and injects dependencies through the `solve_dependencies` function in `fastapi/dependencies/utils.py`.\n\n1.  **Dependency Analysis**: When a route is defined, `get_dependant` (in `fastapi/dependencies/utils.py`) inspects the endpoint's signature. It identifies parameters that are dependencies (using `params.Depends` or `params.Security`) and builds a `Dependant` model representing the dependency tree.\n2.  **Resolution**: During a request, `solve_dependencies` is called. It recursively traverses the `Dependant` tree. For each dependency:\n    *   It checks if the dependency is already in the `dependency_cache` (if `use_cache` is `True`).\n    *   If it is a generator (using `yield`), it uses `_solve_generator` to manage the lifecycle via an `AsyncExitStack`.\n    *   It executes the dependency (as a coroutine or in a threadpool) and stores the result in the `dependency_cache`.\n3.  **Injection**: The resolved values are collected into a dictionary and passed as keyword arguments to the endpoint function via `run_endpoint_function` (in `fastapi/routing.py`).\n\nFILES: fastapi/dependencies/utils.py, fastapi/routing.py, fastapi/dependencies/models.py",
+      "citedFiles": [
+        "fastapi/dependencies/utils.py",
+        "fastapi/routing.py",
+        "fastapi/dependencies/models.py"
+      ],
+      "expectedFiles": [
+        "fastapi/dependencies/utils.py",
+        "fastapi/routing.py"
+      ],
+      "citationPrecision": 0.6666666666666666,
+      "citationRecall": 1,
+      "qualityScore": null,
+      "judgeRationale": null,
+      "filesInWindow": [
+        "fastapi/__init__.py",
+        "fastapi/__main__.py",
+        "fastapi/_compat/__init__.py",
+        "fastapi/_compat/shared.py",
+        "fastapi/_compat/v2.py",
+        "fastapi/applications.py",
+        "fastapi/background.py",
+        "fastapi/cli.py",
+        "fastapi/concurrency.py",
+        "fastapi/datastructures.py",
+        "fastapi/dependencies/models.py",
+        "fastapi/dependencies/utils.py",
+        "fastapi/encoders.py",
+        "fastapi/exception_handlers.py",
+        "fastapi/exceptions.py",
+        "fastapi/logger.py",
+        "fastapi/middleware/__init__.py",
+        "fastapi/middleware/asyncexitstack.py",
+        "fastapi/middleware/cors.py",
+        "fastapi/middleware/gzip.py",
+        "fastapi/middleware/httpsredirect.py",
+        "fastapi/middleware/trustedhost.py",
+        "fastapi/middleware/wsgi.py",
+        "fastapi/openapi/constants.py",
+        "fastapi/openapi/docs.py",
+        "fastapi/openapi/models.py",
+        "fastapi/openapi/utils.py",
+        "fastapi/param_functions.py",
+        "fastapi/params.py",
+        "fastapi/requests.py",
+        "fastapi/responses.py",
+        "fastapi/routing.py"
+      ]
+    },
+    {
+      "questionId": "q-seed-1",
+      "question": "How does FastAPI resolve and inject dependencies for a route?",
+      "type": "cross-file",
+      "strategy": "top-k",
+      "contextTokens": 1989,
+      "promptTokens": 2729,
+      "outputTokens": 244,
+      "costUsd": 0.0010482500000000001,
+      "latencyMs": 6950,
+      "answer": "FastAPI resolves and injects dependencies through the `solve_dependencies` function in `fastapi/dependencies/utils.py`. \n\nWhen a route is handled, `_FrontendRouteGroup.handle` calls `_solve_dependencies`, which initializes `AsyncExitStack` instances for the request and function scopes. These stacks are stored in the request scope (`fastapi_inner_astack` and `fastapi_function_astack`) and passed to `solve_dependencies`.\n\nThe `solve_dependencies` function iterates through the `dependant.dependencies` list. It handles dependency overrides if provided, recursively resolves sub-dependencies, and manages caching via `dependency_cache`. It uses the `AsyncExitStack` to manage the lifecycle of generator-based dependencies. \n\nFinally, it populates a `values` dictionary with resolved dependencies (including `Request`, `WebSocket`, `BackgroundTasks`, `Response`, and `SecurityScopes`) and returns a `SolvedDependency` object containing these values, any errors, and background tasks. The route handler then uses these results to execute the endpoint and manage the response.\n\nFILES: fastapi/routing.py, fastapi/dependencies/utils.py",
+      "citedFiles": [
+        "fastapi/routing.py",
+        "fastapi/dependencies/utils.py"
+      ],
+      "expectedFiles": [
+        "fastapi/dependencies/utils.py",
+        "fastapi/routing.py"
+      ],
+      "citationPrecision": 1,
+      "citationRecall": 1,
+      "qualityScore": null,
+      "judgeRationale": null,
+      "filesInWindow": [
+        "fastapi/dependencies/utils.py",
+        "fastapi/routing.py"
+      ]
+    },
+    {
+      "questionId": "q-seed-1",
+      "question": "How does FastAPI resolve and inject dependencies for a route?",
+      "type": "cross-file",
+      "strategy": "rerank",
+      "contextTokens": 2206,
+      "promptTokens": 2984,
+      "outputTokens": 308,
+      "costUsd": 0.001208,
+      "latencyMs": 12944,
+      "answer": "FastAPI resolves and injects dependencies through the `solve_dependencies` function. \n\n1. **Initialization**: The process begins in `_FrontendRouteGroup._solve_dependencies`, which manages two `AsyncExitStack` instances (`fastapi_inner_astack` and `fastapi_function_astack`) in the request scope to handle dependency lifecycles.\n2. **Resolution**: `solve_dependencies` iterates through the `dependant.dependencies` list. It executes dependencies (using `_solve_generator` for generators, or calling the function directly/via `run_in_threadpool`) and caches the results.\n3. **Parameter Mapping**: It uses `request_params_to_args` to extract values from path, query, header, and cookie parameters, and `request_body_to_args` for body parameters.\n4. **Injection**: The `Dependant` object (defined in `fastapi/dependencies/models.py`) tracks parameters like `request`, `websocket`, `background_tasks`, `response`, and `security_scopes`. `solve_dependencies` injects these into the `values` dictionary based on the `Dependant` configuration.\n5. **Execution**: Finally, `run_endpoint_function` executes the route handler by passing the resolved `values` dictionary to the `dependant.call`.\n\nFILES: fastapi/dependencies/utils.py, fastapi/dependencies/models.py, fastapi/routing.py",
+      "citedFiles": [
+        "fastapi/dependencies/utils.py",
+        "fastapi/dependencies/models.py",
+        "fastapi/routing.py"
+      ],
+      "expectedFiles": [
+        "fastapi/dependencies/utils.py",
+        "fastapi/routing.py"
+      ],
+      "citationPrecision": 0.6666666666666666,
+      "citationRecall": 1,
+      "qualityScore": null,
+      "judgeRationale": null,
+      "filesInWindow": [
+        "fastapi/dependencies/models.py",
+        "fastapi/dependencies/utils.py",
+        "fastapi/routing.py"
+      ]
+    },
+    {
+      "questionId": "q-seed-1",
+      "question": "How does FastAPI resolve and inject dependencies for a route?",
+      "type": "cross-file",
+      "strategy": "skeleton",
+      "contextTokens": 18528,
+      "promptTokens": 21964,
+      "outputTokens": 268,
+      "costUsd": 0.005893000000000001,
+      "latencyMs": 9373,
+      "answer": "FastAPI resolves and injects dependencies through the `solve_dependencies` function in `fastapi/dependencies/utils.py`. \n\nWhen a request is handled, the application identifies the `Dependant` object associated with the route. The `solve_dependencies` function iterates through the `dependant.dependencies` list, recursively resolving sub-dependencies. It manages dependency caching using a `dependency_cache` dictionary and handles dependency overrides if a `dependency_overrides_provider` is present.\n\nFor generator-based dependencies, it utilizes `AsyncExitStack` (stored in the request scope as `fastapi_inner_astack` or `fastapi_function_astack`) to manage the lifecycle of the dependency. \n\nThe function populates a `values` dictionary with the resolved results, which are then injected into the endpoint function. It also handles special parameters like `Request`, `WebSocket`, `BackgroundTasks`, `Response`, and `SecurityScopes` by checking the `dependant` attributes (e.g., `request_param_name`, `background_tasks_param_name`). The final result is returned as a `SolvedDependency` object, containing the resolved values, errors, and updated background tasks.\n\nFILES: fastapi/dependencies/utils.py, fastapi/routing.py",
+      "citedFiles": [
+        "fastapi/dependencies/utils.py",
+        "fastapi/routing.py"
+      ],
+      "expectedFiles": [
+        "fastapi/dependencies/utils.py",
+        "fastapi/routing.py"
+      ],
+      "citationPrecision": 1,
+      "citationRecall": 1,
+      "qualityScore": null,
+      "judgeRationale": null,
+      "filesInWindow": [
+        "fastapi/dependencies/utils.py",
+        "fastapi/routing.py"
+      ]
+    },
+    {
+      "questionId": "q-seed-2",
+      "question": "Where does FastAPI implement OAuth2 password flow?",
+      "type": "factual",
+      "strategy": "full-stuff",
+      "contextTokens": 125917,
+      "promptTokens": 126046,
+      "outputTokens": 70,
+      "costUsd": 0.0316165,
+      "latencyMs": 8468,
+      "answer": "The provided repository context does not contain an implementation of the OAuth2 password flow. While the `fastapi/openapi/models.py` file defines `OAuthFlowPassword` as a model for OpenAPI documentation, the actual implementation logic for the OAuth2 password flow is not present in the provided files.\n\nFILES: fastapi/openapi/models.py",
+      "citedFiles": [
+        "fastapi/openapi/models.py"
+      ],
+      "expectedFiles": [
+        "fastapi/security/oauth2.py"
+      ],
+      "citationPrecision": 0,
+      "citationRecall": 0,
+      "qualityScore": null,
+      "judgeRationale": null,
+      "filesInWindow": [
+        "fastapi/__init__.py",
+        "fastapi/__main__.py",
+        "fastapi/_compat/__init__.py",
+        "fastapi/_compat/shared.py",
+        "fastapi/_compat/v2.py",
+        "fastapi/applications.py",
+        "fastapi/background.py",
+        "fastapi/cli.py",
+        "fastapi/concurrency.py",
+        "fastapi/datastructures.py",
+        "fastapi/dependencies/models.py",
+        "fastapi/dependencies/utils.py",
+        "fastapi/encoders.py",
+        "fastapi/exception_handlers.py",
+        "fastapi/exceptions.py",
+        "fastapi/logger.py",
+        "fastapi/middleware/__init__.py",
+        "fastapi/middleware/asyncexitstack.py",
+        "fastapi/middleware/cors.py",
+        "fastapi/middleware/gzip.py",
+        "fastapi/middleware/httpsredirect.py",
+        "fastapi/middleware/trustedhost.py",
+        "fastapi/middleware/wsgi.py",
+        "fastapi/openapi/constants.py",
+        "fastapi/openapi/docs.py",
+        "fastapi/openapi/models.py",
+        "fastapi/openapi/utils.py",
+        "fastapi/param_functions.py",
+        "fastapi/params.py",
+        "fastapi/requests.py",
+        "fastapi/responses.py",
+        "fastapi/routing.py"
+      ]
+    },
+    {
+      "questionId": "q-seed-2",
+      "question": "Where does FastAPI implement OAuth2 password flow?",
+      "type": "factual",
+      "strategy": "top-k",
+      "contextTokens": 1569,
+      "promptTokens": 1873,
+      "outputTokens": 218,
+      "costUsd": 0.0007952500000000001,
+      "latencyMs": 8421,
+      "answer": "FastAPI implements the OAuth2 password flow through several classes located in `fastapi/security/oauth2.py`:\n\n*   **`OAuth2PasswordBearer`**: A class used as a dependency to handle the OAuth2 flow for authentication using a bearer token obtained with a password.\n*   **`OAuth2PasswordRequestForm`**: A dependency class used to collect `username` and `password` as form data for the password flow.\n*   **`OAuth2PasswordRequestFormStrict`**: A stricter version of `OAuth2PasswordRequestForm` that requires the `grant_type` field to be set to `\"password\"`, as mandated by the OAuth2 specification.\n*   **`OAuth2`**: The base class from which these authentication classes inherit.\n\nAdditionally, `fastapi/openapi/models.py` defines the `OAuthFlowPassword` class, which represents the password flow model for OpenAPI documentation, containing the `tokenUrl` field.\n\nFILES: fastapi/security/oauth2.py, fastapi/openapi/models.py",
+      "citedFiles": [
+        "fastapi/security/oauth2.py",
+        "fastapi/openapi/models.py"
+      ],
+      "expectedFiles": [
+        "fastapi/security/oauth2.py"
+      ],
+      "citationPrecision": 0.5,
+      "citationRecall": 1,
+      "qualityScore": null,
+      "judgeRationale": null,
+      "filesInWindow": [
+        "fastapi/openapi/models.py",
+        "fastapi/security/oauth2.py"
+      ]
+    },
+    {
+      "questionId": "q-seed-2",
+      "question": "Where does FastAPI implement OAuth2 password flow?",
+      "type": "factual",
+      "strategy": "rerank",
+      "contextTokens": 2946,
+      "promptTokens": 3489,
+      "outputTokens": 170,
+      "costUsd": 0.00112725,
+      "latencyMs": 5649,
+      "answer": "FastAPI implements the OAuth2 password flow using the following classes in `fastapi/security/oauth2.py`:\n\n1.  **`OAuth2PasswordBearer`**: Used as a dependency to handle the bearer token authentication.\n2.  **`OAuth2PasswordRequestForm`**: A dependency class used to collect `username` and `password` as form data. It is permissive regarding the `grant_type` field.\n3.  **`OAuth2PasswordRequestFormStrict`**: A subclass of `OAuth2PasswordRequestForm` that strictly enforces the `grant_type` field to be the string `\"password\"`, as required by the OAuth2 specification.\n\nThese classes are designed to be used as dependencies in path operations to manage authentication and token requests.\n\nFILES: fastapi/security/oauth2.py",
+      "citedFiles": [
+        "fastapi/security/oauth2.py"
+      ],
+      "expectedFiles": [
+        "fastapi/security/oauth2.py"
+      ],
+      "citationPrecision": 1,
+      "citationRecall": 1,
+      "qualityScore": null,
+      "judgeRationale": null,
+      "filesInWindow": [
+        "fastapi/security/oauth2.py"
+      ]
+    },
+    {
+      "questionId": "q-seed-2",
+      "question": "Where does FastAPI implement OAuth2 password flow?",
+      "type": "factual",
+      "strategy": "skeleton",
+      "contextTokens": 18108,
+      "promptTokens": 21108,
+      "outputTokens": 211,
+      "costUsd": 0.0055934999999999995,
+      "latencyMs": 16589,
+      "answer": "FastAPI implements the OAuth2 password flow through several classes located in `fastapi/security/oauth2.py`:\n\n*   **`OAuth2PasswordBearer`**: Used as a dependency to handle the bearer token authentication flow for OAuth2 password authentication.\n*   **`OAuth2PasswordRequestForm`**: A dependency class used to collect `username` and `password` from form data as required by the OAuth2 specification for the password flow.\n*   **`OAuth2PasswordRequestFormStrict`**: A stricter version of `OAuth2PasswordRequestForm` that requires the `grant_type` field to be explicitly set to `\"password\"`.\n\nAdditionally, the base class `OAuth2` in `fastapi/security/oauth2.py` provides the foundation for these flows, and `OAuthFlowPassword` in `fastapi/openapi/models.py` defines the schema for the password flow in the OpenAPI documentation.\n\nFILES: fastapi/security/oauth2.py, fastapi/openapi/models.py",
+      "citedFiles": [
+        "fastapi/security/oauth2.py",
+        "fastapi/openapi/models.py"
+      ],
+      "expectedFiles": [
+        "fastapi/security/oauth2.py"
+      ],
+      "citationPrecision": 0.5,
+      "citationRecall": 1,
+      "qualityScore": null,
+      "judgeRationale": null,
+      "filesInWindow": [
+        "fastapi/openapi/models.py",
+        "fastapi/security/oauth2.py"
+      ]
+    },
+    {
+      "questionId": "q-seed-3",
+      "question": "How does the OpenAPI schema get generated and served?",
+      "type": "architectural",
+      "strategy": "full-stuff",
+      "contextTokens": 125917,
+      "promptTokens": 126047,
+      "outputTokens": 248,
+      "costUsd": 0.031883749999999995,
+      "latencyMs": 7610,
+      "answer": "The OpenAPI schema is generated by the `FastAPI.openapi()` method, which calls `get_openapi` from `fastapi.openapi.utils`. This function aggregates metadata, routes, and webhooks, then uses `get_definitions` to generate JSON schemas for all models involved in the application's routes.\n\nThe schema is served via a route added in the `FastAPI.setup()` method. When `openapi_url` is set (defaulting to `/openapi.json`), `FastAPI` adds a route that returns a `JSONResponse` containing the generated schema. If `docs_url` or `redoc_url` are also set, `FastAPI` adds routes that return `HTMLResponse` (using `get_swagger_ui_html` or `get_redoc_html`) to serve the interactive documentation, which consumes the OpenAPI schema from the `openapi_url`.\n\nThe `FastAPI.openapi()` method caches the generated schema in `app.openapi_schema` and only regenerates it if the router's route version changes, optimizing performance.\n\nFILES: fastapi/applications.py, fastapi/openapi/utils.py, fastapi/openapi/docs.py",
+      "citedFiles": [
+        "fastapi/applications.py",
+        "fastapi/openapi/utils.py",
+        "fastapi/openapi/docs.py"
+      ],
+      "expectedFiles": [
+        "fastapi/openapi/utils.py",
+        "fastapi/applications.py"
+      ],
+      "citationPrecision": 0.6666666666666666,
+      "citationRecall": 1,
+      "qualityScore": null,
+      "judgeRationale": null,
+      "filesInWindow": [
+        "fastapi/__init__.py",
+        "fastapi/__main__.py",
+        "fastapi/_compat/__init__.py",
+        "fastapi/_compat/shared.py",
+        "fastapi/_compat/v2.py",
+        "fastapi/applications.py",
+        "fastapi/background.py",
+        "fastapi/cli.py",
+        "fastapi/concurrency.py",
+        "fastapi/datastructures.py",
+        "fastapi/dependencies/models.py",
+        "fastapi/dependencies/utils.py",
+        "fastapi/encoders.py",
+        "fastapi/exception_handlers.py",
+        "fastapi/exceptions.py",
+        "fastapi/logger.py",
+        "fastapi/middleware/__init__.py",
+        "fastapi/middleware/asyncexitstack.py",
+        "fastapi/middleware/cors.py",
+        "fastapi/middleware/gzip.py",
+        "fastapi/middleware/httpsredirect.py",
+        "fastapi/middleware/trustedhost.py",
+        "fastapi/middleware/wsgi.py",
+        "fastapi/openapi/constants.py",
+        "fastapi/openapi/docs.py",
+        "fastapi/openapi/models.py",
+        "fastapi/openapi/utils.py",
+        "fastapi/param_functions.py",
+        "fastapi/params.py",
+        "fastapi/requests.py",
+        "fastapi/responses.py",
+        "fastapi/routing.py"
+      ]
+    },
+    {
+      "questionId": "q-seed-3",
+      "question": "How does the OpenAPI schema get generated and served?",
+      "type": "architectural",
+      "strategy": "top-k",
+      "contextTokens": 2499,
+      "promptTokens": 3351,
+      "outputTokens": 267,
+      "costUsd": 0.00123825,
+      "latencyMs": 7870,
+      "answer": "The OpenAPI schema is generated by the `FastAPI.openapi()` method, which calls the `get_openapi` utility function. This function aggregates metadata, routes, and webhooks to build a dictionary representation of the OpenAPI specification, which is then validated and encoded using the `OpenAPI` Pydantic model.\n\nThe schema generation process involves:\n1.  **Field and Model Extraction**: `get_fields_from_routes` and `get_flat_models_from_fields` identify the data models involved.\n2.  **Path Generation**: `get_openapi_path` iterates through routes and webhooks to generate path-specific operations, security schemes, and definitions.\n3.  **Caching**: `FastAPI.openapi()` stores the result in `app.openapi_schema` to avoid redundant computation.\n\nThe schema is served via the `FastAPI.setup()` method, which registers an asynchronous `openapi` route handler at the path defined by `self.openapi_url`. This handler returns the generated schema as a `JSONResponse`. Additionally, `setup()` configures the Swagger UI by adding a route that returns `get_swagger_ui_html`.\n\nFILES: fastapi/applications.py, fastapi/openapi/utils.py, fastapi/openapi/models.py",
+      "citedFiles": [
+        "fastapi/applications.py",
+        "fastapi/openapi/utils.py",
+        "fastapi/openapi/models.py"
+      ],
+      "expectedFiles": [
+        "fastapi/openapi/utils.py",
+        "fastapi/applications.py"
+      ],
+      "citationPrecision": 0.6666666666666666,
+      "citationRecall": 1,
+      "qualityScore": null,
+      "judgeRationale": null,
+      "filesInWindow": [
+        "fastapi/applications.py",
+        "fastapi/openapi/models.py",
+        "fastapi/openapi/utils.py"
+      ]
+    },
+    {
+      "questionId": "q-seed-3",
+      "question": "How does the OpenAPI schema get generated and served?",
+      "type": "architectural",
+      "strategy": "rerank",
+      "contextTokens": 2855,
+      "promptTokens": 3916,
+      "outputTokens": 217,
+      "costUsd": 0.0013045,
+      "latencyMs": 6072,
+      "answer": "The OpenAPI schema is generated by the `FastAPI.openapi` method, which calls `get_openapi` from `fastapi.openapi.utils`. This function aggregates route information, dependencies, and models to build the schema. It uses `get_fields_from_routes` to collect fields, `get_model_name_map` to map models, and `get_openapi_path` to process individual routes and webhooks into OpenAPI paths. The result is cached in `app.openapi_schema` to avoid redundant generation.\n\nThe schema is served via the `FastAPI.setup` method. If `openapi_url` is configured, `setup` registers an asynchronous route handler that calls `self.openapi()` and returns the schema as a `JSONResponse`. Additionally, if `docs_url` is set, `setup` registers a route handler that returns `get_swagger_ui_html` to serve the Swagger UI, which consumes the generated OpenAPI schema.\n\nFILES: fastapi/applications.py, fastapi/openapi/utils.py",
+      "citedFiles": [
+        "fastapi/applications.py",
+        "fastapi/openapi/utils.py"
+      ],
+      "expectedFiles": [
+        "fastapi/openapi/utils.py",
+        "fastapi/applications.py"
+      ],
+      "citationPrecision": 1,
+      "citationRecall": 1,
+      "qualityScore": null,
+      "judgeRationale": null,
+      "filesInWindow": [
+        "fastapi/applications.py",
+        "fastapi/openapi/utils.py"
+      ]
+    },
+    {
+      "questionId": "q-seed-3",
+      "question": "How does the OpenAPI schema get generated and served?",
+      "type": "architectural",
+      "strategy": "skeleton",
+      "contextTokens": 19038,
+      "promptTokens": 22586,
+      "outputTokens": 289,
+      "costUsd": 0.0060799999999999995,
+      "latencyMs": 13866,
+      "answer": "The OpenAPI schema is generated by the `FastAPI.openapi()` method, which calls the `get_openapi` function from `fastapi/openapi/utils.py`. \n\n1.  **Generation**: `get_openapi` iterates over the application's routes and webhooks using `routing.iter_route_contexts`. For each route, it uses `get_openapi_path` to extract metadata, parameters, and request/response bodies. It leverages `get_definitions` to create JSON schemas for models and `jsonable_encoder` to serialize the final `OpenAPI` model into a dictionary.\n2.  **Caching**: The `FastAPI.openapi()` method caches the generated schema in `self.openapi_schema` and only regenerates it if the application's routes have changed (tracked via `self.router._get_routes_version()`).\n3.  **Serving**: The `FastAPI.setup()` method registers a route (defaulting to `/openapi.json`) that serves the schema as a `JSONResponse`. Additionally, `setup()` registers routes for interactive documentation (Swagger UI and ReDoc) that use `get_swagger_ui_html` or `get_redoc_html` to serve HTML pages that consume the OpenAPI schema.\n\nFILES: fastapi/applications.py, fastapi/openapi/utils.py, fastapi/openapi/docs.py",
+      "citedFiles": [
+        "fastapi/applications.py",
+        "fastapi/openapi/utils.py",
+        "fastapi/openapi/docs.py"
+      ],
+      "expectedFiles": [
+        "fastapi/openapi/utils.py",
+        "fastapi/applications.py"
+      ],
+      "citationPrecision": 0.6666666666666666,
+      "citationRecall": 1,
+      "qualityScore": null,
+      "judgeRationale": null,
+      "filesInWindow": [
+        "fastapi/applications.py",
+        "fastapi/openapi/models.py",
+        "fastapi/openapi/utils.py"
+      ]
+    }
+  ]
+}

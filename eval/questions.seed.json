@@ -1,0 +1,5 @@
+[
+  { "id": "q-seed-1", "type": "cross-file", "question": "How does FastAPI resolve and inject dependencies for a route?", "expectedFiles": ["fastapi/dependencies/utils.py", "fastapi/routing.py"] },
+  { "id": "q-seed-2", "type": "factual", "question": "Where does FastAPI implement OAuth2 password flow?", "expectedFiles": ["fastapi/security/oauth2.py"] },
+  { "id": "q-seed-3", "type": "architectural", "question": "How does the OpenAPI schema get generated and served?", "expectedFiles": ["fastapi/openapi/utils.py", "fastapi/applications.py"] }
+]
