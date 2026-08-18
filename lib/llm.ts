@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { ANSWER_MODEL, JUDGE_MODEL, OUTPUT_TOKEN_RESERVE, costUsd } from '../config/models';
 
@@ -20,7 +21,18 @@ import { ANSWER_MODEL, JUDGE_MODEL, OUTPUT_TOKEN_RESERVE, costUsd } from '../con
  * so latency from cached rows is never averaged into reported timings.
  */
 
-const CACHE_DIR = join(process.cwd(), '.cache', 'responses');
+/**
+ * Serverless filesystems are read-only apart from /tmp, so a cache rooted at
+ * the working directory makes every live request fail with ENOENT -- while
+ * working perfectly in local development, which is exactly how it reached
+ * production unnoticed. On Vercel the cache moves to /tmp, where it still
+ * helps: it survives for the life of a warm container, so a repeated question
+ * costs nothing.
+ */
+const ON_SERVERLESS = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
+const CACHE_DIR = ON_SERVERLESS
+  ? join(tmpdir(), 'contextlab-responses')
+  : join(process.cwd(), '.cache', 'responses');
 
 export interface LlmResult {
   text: string;
@@ -44,15 +56,25 @@ function geminiKeys(): string[] {
   return k;
 }
 
+/** Cache access never fails a request. A cache is an optimisation; if the
+ *  filesystem refuses, the call simply costs a request. */
 function cacheRead(key: string): LlmResult | null {
-  const p = join(CACHE_DIR, `${key}.json`);
-  if (!existsSync(p)) return null;
-  return { ...(JSON.parse(readFileSync(p, 'utf8')) as LlmResult), cached: true };
+  try {
+    const p = join(CACHE_DIR, `${key}.json`);
+    if (!existsSync(p)) return null;
+    return { ...(JSON.parse(readFileSync(p, 'utf8')) as LlmResult), cached: true };
+  } catch {
+    return null;
+  }
 }
 
 function cacheWrite(key: string, value: LlmResult): void {
-  mkdirSync(CACHE_DIR, { recursive: true });
-  writeFileSync(join(CACHE_DIR, `${key}.json`), JSON.stringify(value, null, 2));
+  try {
+    mkdirSync(CACHE_DIR, { recursive: true });
+    writeFileSync(join(CACHE_DIR, `${key}.json`), JSON.stringify(value, null, 2));
+  } catch {
+    // Read-only filesystem or disk pressure: not worth failing the call over.
+  }
 }
 
 /** Serialises calls and enforces a minimum gap, since free-tier limits are per-minute. */
