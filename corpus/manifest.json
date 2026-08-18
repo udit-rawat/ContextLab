@@ -1,0 +1,252 @@
+{
+  "repo": "https://github.com/fastapi/fastapi.git",
+  "commit": "66b2c5a9b5ddf65f218423072ad158e42ed780aa",
+  "include": "fastapi/**/*.py",
+  "files": 48,
+  "bytes": 766286,
+  "tokens": 153531,
+  "generatedBy": "scripts/fetch-corpus.mjs",
+  "tokenizer": "gpt-tokenizer (o200k_base) - approximate for Gemini; exact counts come from API usageMetadata",
+  "entries": [
+    {
+      "path": "fastapi/__init__.py",
+      "bytes": 1081,
+      "tokens": 228
+    },
+    {
+      "path": "fastapi/__main__.py",
+      "bytes": 37,
+      "tokens": 9
+    },
+    {
+      "path": "fastapi/_compat/__init__.py",
+      "bytes": 2095,
+      "tokens": 472
+    },
+    {
+      "path": "fastapi/_compat/shared.py",
+      "bytes": 7323,
+      "tokens": 1620
+    },
+    {
+      "path": "fastapi/_compat/v2.py",
+      "bytes": 17601,
+      "tokens": 4018
+    },
+    {
+      "path": "fastapi/applications.py",
+      "bytes": 183840,
+      "tokens": 34517
+    },
+    {
+      "path": "fastapi/background.py",
+      "bytes": 1820,
+      "tokens": 384
+    },
+    {
+      "path": "fastapi/cli.py",
+      "bytes": 418,
+      "tokens": 114
+    },
+    {
+      "path": "fastapi/concurrency.py",
+      "bytes": 1489,
+      "tokens": 341
+    },
+    {
+      "path": "fastapi/datastructures.py",
+      "bytes": 5321,
+      "tokens": 1192
+    },
+    {
+      "path": "fastapi/dependencies/__init__.py",
+      "bytes": 0,
+      "tokens": 0
+    },
+    {
+      "path": "fastapi/dependencies/models.py",
+      "bytes": 8092,
+      "tokens": 1993
+    },
+    {
+      "path": "fastapi/dependencies/utils.py",
+      "bytes": 39180,
+      "tokens": 8268
+    },
+    {
+      "path": "fastapi/encoders.py",
+      "bytes": 11713,
+      "tokens": 2541
+    },
+    {
+      "path": "fastapi/exception_handlers.py",
+      "bytes": 1275,
+      "tokens": 266
+    },
+    {
+      "path": "fastapi/exceptions.py",
+      "bytes": 7453,
+      "tokens": 1618
+    },
+    {
+      "path": "fastapi/logger.py",
+      "bytes": 54,
+      "tokens": 12
+    },
+    {
+      "path": "fastapi/middleware/__init__.py",
+      "bytes": 58,
+      "tokens": 9
+    },
+    {
+      "path": "fastapi/middleware/asyncexitstack.py",
+      "bytes": 637,
+      "tokens": 151
+    },
+    {
+      "path": "fastapi/middleware/cors.py",
+      "bytes": 79,
+      "tokens": 18
+    },
+    {
+      "path": "fastapi/middleware/gzip.py",
+      "bytes": 79,
+      "tokens": 18
+    },
+    {
+      "path": "fastapi/middleware/httpsredirect.py",
+      "bytes": 115,
+      "tokens": 23
+    },
+    {
+      "path": "fastapi/middleware/trustedhost.py",
+      "bytes": 109,
+      "tokens": 23
+    },
+    {
+      "path": "fastapi/middleware/wsgi.py",
+      "bytes": 107,
+      "tokens": 29
+    },
+    {
+      "path": "fastapi/openapi/__init__.py",
+      "bytes": 0,
+      "tokens": 0
+    },
+    {
+      "path": "fastapi/openapi/constants.py",
+      "bytes": 153,
+      "tokens": 43
+    },
+    {
+      "path": "fastapi/openapi/docs.py",
+      "bytes": 12425,
+      "tokens": 2762
+    },
+    {
+      "path": "fastapi/openapi/models.py",
+      "bytes": 14608,
+      "tokens": 3704
+    },
+    {
+      "path": "fastapi/openapi/utils.py",
+      "bytes": 29347,
+      "tokens": 5641
+    },
+    {
+      "path": "fastapi/param_functions.py",
+      "bytes": 69596,
+      "tokens": 14446
+    },
+    {
+      "path": "fastapi/params.py",
+      "bytes": 26205,
+      "tokens": 5705
+    },
+    {
+      "path": "fastapi/requests.py",
+      "bytes": 142,
+      "tokens": 32
+    },
+    {
+      "path": "fastapi/responses.py",
+      "bytes": 4144,
+      "tokens": 996
+    },
+    {
+      "path": "fastapi/routing.py",
+      "bytes": 255632,
+      "tokens": 49172
+    },
+    {
+      "path": "fastapi/security/__init__.py",
+      "bytes": 881,
+      "tokens": 198
+    },
+    {
+      "path": "fastapi/security/api_key.py",
+      "bytes": 9756,
+      "tokens": 1962
+    },
+    {
+      "path": "fastapi/security/base.py",
+      "bytes": 141,
+      "tokens": 30
+    },
+    {
+      "path": "fastapi/security/http.py",
+      "bytes": 13410,
+      "tokens": 2646
+    },
+    {
+      "path": "fastapi/security/oauth2.py",
+      "bytes": 24178,
+      "tokens": 4758
+    },
+    {
+      "path": "fastapi/security/open_id_connect_url.py",
+      "bytes": 3136,
+      "tokens": 595
+    },
+    {
+      "path": "fastapi/security/utils.py",
+      "bytes": 261,
+      "tokens": 53
+    },
+    {
+      "path": "fastapi/sse.py",
+      "bytes": 7083,
+      "tokens": 1663
+    },
+    {
+      "path": "fastapi/staticfiles.py",
+      "bytes": 69,
+      "tokens": 15
+    },
+    {
+      "path": "fastapi/templating.py",
+      "bytes": 76,
+      "tokens": 20
+    },
+    {
+      "path": "fastapi/testclient.py",
+      "bytes": 66,
+      "tokens": 15
+    },
+    {
+      "path": "fastapi/types.py",
+      "bytes": 438,
+      "tokens": 111
+    },
+    {
+      "path": "fastapi/utils.py",
+      "bytes": 4341,
+      "tokens": 1048
+    },
+    {
+      "path": "fastapi/websockets.py",
+      "bytes": 222,
+      "tokens": 52
+    }
+  ]
+}

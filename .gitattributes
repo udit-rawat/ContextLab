@@ -1,0 +1,6 @@
+# Force LF everywhere. The corpus must byte-for-byte match upstream FastAPI at
+# the pinned commit, or token counts differ between platforms and the reported
+# numbers stop reproducing.
+* text=auto eol=lf
+*.py text eol=lf
+*.json text eol=lf
