@@ -8,7 +8,11 @@
     "start": "next start",
     "lint": "eslint",
     "smoke": "node scripts/smoke.mjs",
-    "corpus": "node scripts/fetch-corpus.mjs"
+    "corpus": "node scripts/fetch-corpus.mjs",
+    "verify-parser": "tsx scripts/verify-parser.ts",
+    "stats": "tsx scripts/corpus-stats.ts",
+    "index": "tsx scripts/build-index.ts",
+    "search": "tsx scripts/search.ts"
   },
   "dependencies": {
     "gpt-tokenizer": "^4.0.0",
@@ -24,6 +28,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.3.1",
     "tailwindcss": "^4",
+    "tsx": "^4.23.12",
     "typescript": "^5"
   }
 }
