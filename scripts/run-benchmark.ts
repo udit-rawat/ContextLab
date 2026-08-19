@@ -15,6 +15,7 @@ import { llmRerank } from '../lib/rerank';
 import { generate } from '../lib/llm';
 import { buildPrompt, parseCitations } from '../lib/prompt';
 import { loadFullStuffPlan } from '../lib/store';
+import { scoreAnswer } from '../lib/judge';
 import type { Benchmark, ResultRow, QuestionType } from '../lib/results';
 import { ANSWER_MODEL, JUDGE_MODEL, EMBED_MODEL, CORPUS, CONTEXT_TOKEN_CAP } from '../config/models';
 
@@ -23,7 +24,16 @@ for (const line of readFileSync('.env', 'utf8').split('\n')) {
   if (m && !process.env[m[1]]) process.env[m[1]] = m[2];
 }
 
-interface Question { id: string; type: QuestionType; question: string; expectedFiles: string[] }
+interface Question {
+  id: string;
+  type: QuestionType;
+  question: string;
+  expectedFiles: string[];
+  /** Reference answer the judge grades against. */
+  expectedAnswer?: string;
+  /** file:line pointers so a human can verify the reference. Not sent to any model. */
+  verify?: string;
+}
 
 /** Precision and recall over cited files. Reported separately from the quality
  *  rubric on purpose: one metric is a single point of failure, and where the two
@@ -39,7 +49,7 @@ function citationScores(cited: string[], expected: string[]): { precision: numbe
 
 async function main() {
   const argIdx = process.argv.indexOf('--questions');
-  const questionsPath = argIdx !== -1 ? process.argv[argIdx + 1] : 'eval/questions.seed.json';
+  const questionsPath = argIdx !== -1 ? process.argv[argIdx + 1] : 'eval/questions.json';
   const questions = JSON.parse(readFileSync(questionsPath, 'utf8')) as Question[];
   console.log(`${questions.length} questions x 4 strategies = ${questions.length * 4} answer calls\n`);
 
@@ -63,6 +73,12 @@ async function main() {
       const cited = parseCitations(res.text);
       const { precision, recall } = citationScores(cited, q.expectedFiles);
 
+      // Judged blind: the judge sees question, reference and candidate only.
+      // It is never told which strategy produced the answer.
+      const verdict = q.expectedAnswer
+        ? await scoreAnswer(q.question, q.expectedAnswer, res.text)
+        : { score: null, rationale: null };
+
       rows.push({
         questionId: q.id,
         question: q.question,
@@ -78,13 +94,13 @@ async function main() {
         expectedFiles: q.expectedFiles,
         citationPrecision: precision,
         citationRecall: recall,
-        qualityScore: null,
-        judgeRationale: null,
+        qualityScore: verdict.score,
+        judgeRationale: verdict.rationale,
         filesInWindow: ctx.files,
       });
 
       process.stdout.write(
-        `    ${ctx.strategy.padEnd(12)} ${String(res.promptTokens).padStart(7)}t  $${res.costUsd.toFixed(6)}  ${String(res.latencyMs).padStart(6)}ms  prec=${precision === null ? '-' : precision.toFixed(2)}  ${res.cached ? '(cached)' : ''}\n`,
+        `    ${ctx.strategy.padEnd(12)} ${String(res.promptTokens).padStart(7)}t  $${res.costUsd.toFixed(6)}  ${String(res.latencyMs).padStart(6)}ms  prec=${precision === null ? '-' : precision.toFixed(2)}  score=${verdict.score ?? '-'}  ${res.cached ? '(cached)' : ''}\n`,
       );
     }
   }

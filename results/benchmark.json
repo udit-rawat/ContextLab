@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-18T14:46:38.377Z",
+  "generatedAt": "2026-08-18T16:10:58.742Z",
   "answerModel": "gemini-3.1-flash-lite",
   "judgeModel": "openai/gpt-oss-120b",
   "embedModel": "gemini-embedding-001",
@@ -8,29 +8,26 @@
   "contextTokenCap": 128000,
   "rows": [
     {
-      "questionId": "q-seed-1",
-      "question": "How does FastAPI resolve and inject dependencies for a route?",
-      "type": "cross-file",
+      "questionId": "f1",
+      "question": "What does the jsonable_encoder function do, and what is it used for?",
+      "type": "factual",
       "strategy": "full-stuff",
       "contextTokens": 125917,
-      "promptTokens": 126048,
-      "outputTokens": 289,
-      "costUsd": 0.0319455,
-      "latencyMs": 33372,
-      "answer": "FastAPI resolves and injects dependencies through the `solve_dependencies` function in `fastapi/dependencies/utils.py`.\n\n1.  **Dependency Analysis**: When a route is defined, `get_dependant` (in `fastapi/dependencies/utils.py`) inspects the endpoint's signature. It identifies parameters that are dependencies (using `params.Depends` or `params.Security`) and builds a `Dependant` model representing the dependency tree.\n2.  **Resolution**: During a request, `solve_dependencies` is called. It recursively traverses the `Dependant` tree. For each dependency:\n    *   It checks if the dependency is already in the `dependency_cache` (if `use_cache` is `True`).\n    *   If it is a generator (using `yield`), it uses `_solve_generator` to manage the lifecycle via an `AsyncExitStack`.\n    *   It executes the dependency (as a coroutine or in a threadpool) and stores the result in the `dependency_cache`.\n3.  **Injection**: The resolved values are collected into a dictionary and passed as keyword arguments to the endpoint function via `run_endpoint_function` (in `fastapi/routing.py`).\n\nFILES: fastapi/dependencies/utils.py, fastapi/routing.py, fastapi/dependencies/models.py",
+      "promptTokens": 126054,
+      "outputTokens": 241,
+      "costUsd": 0.031875,
+      "latencyMs": 14563,
+      "answer": "The `jsonable_encoder` function converts any Python object into a format that can be encoded in JSON. It is used internally by FastAPI to ensure that any data returned by an endpoint can be serialized as JSON before being sent to the client.\n\nIt handles various types, including:\n- **Pydantic models**: Converts them to dictionaries using `model_dump`.\n- **Dataclasses**: Converts them using `dataclasses.asdict`.\n- **Enums**: Converts them to their underlying values.\n- **Standard types**: Handles `datetime`, `Decimal`, `UUID`, `Path`, `IPv4/IPv6` addresses, and various collection types (e.g., `set`, `deque`, `GeneratorType`).\n- **Custom encoders**: Supports a `custom_encoder` parameter for user-defined serialization logic.\n\nAdditionally, it provides options to control the output, such as `include`, `exclude`, `by_alias`, and flags to exclude unset, default, or `None` values. It also includes a `sqlalchemy_safe` option to ignore internal SQLAlchemy attributes (starting with `_sa`).\n\nFILES: fastapi/encoders.py",
       "citedFiles": [
-        "fastapi/dependencies/utils.py",
-        "fastapi/routing.py",
-        "fastapi/dependencies/models.py"
+        "fastapi/encoders.py"
       ],
       "expectedFiles": [
-        "fastapi/dependencies/utils.py",
-        "fastapi/routing.py"
+        "fastapi/encoders.py"
       ],
-      "citationPrecision": 0.6666666666666666,
+      "citationPrecision": 1,
       "citationRecall": 1,
-      "qualityScore": null,
-      "judgeRationale": null,
+      "qualityScore": 5,
+      "judgeRationale": "Accurately describes jsonable_encoder’s conversion of various Python objects, its options, and its use before JSONResponse, matching the reference.",
       "filesInWindow": [
         "fastapi/__init__.py",
         "fastapi/__main__.py",
@@ -67,112 +64,258 @@
       ]
     },
     {
-      "questionId": "q-seed-1",
-      "question": "How does FastAPI resolve and inject dependencies for a route?",
-      "type": "cross-file",
+      "questionId": "f1",
+      "question": "What does the jsonable_encoder function do, and what is it used for?",
+      "type": "factual",
       "strategy": "top-k",
-      "contextTokens": 1989,
-      "promptTokens": 2729,
+      "contextTokens": 2431,
+      "promptTokens": 3130,
       "outputTokens": 244,
-      "costUsd": 0.0010482500000000001,
-      "latencyMs": 6950,
-      "answer": "FastAPI resolves and injects dependencies through the `solve_dependencies` function in `fastapi/dependencies/utils.py`. \n\nWhen a route is handled, `_FrontendRouteGroup.handle` calls `_solve_dependencies`, which initializes `AsyncExitStack` instances for the request and function scopes. These stacks are stored in the request scope (`fastapi_inner_astack` and `fastapi_function_astack`) and passed to `solve_dependencies`.\n\nThe `solve_dependencies` function iterates through the `dependant.dependencies` list. It handles dependency overrides if provided, recursively resolves sub-dependencies, and manages caching via `dependency_cache`. It uses the `AsyncExitStack` to manage the lifecycle of generator-based dependencies. \n\nFinally, it populates a `values` dictionary with resolved dependencies (including `Request`, `WebSocket`, `BackgroundTasks`, `Response`, and `SecurityScopes`) and returns a `SolvedDependency` object containing these values, any errors, and background tasks. The route handler then uses these results to execute the endpoint and manage the response.\n\nFILES: fastapi/routing.py, fastapi/dependencies/utils.py",
+      "costUsd": 0.0011485,
+      "latencyMs": 7810,
+      "answer": "The `jsonable_encoder` function converts any Python object into a format compatible with JSON encoding. It is used internally by FastAPI to ensure that objects returned by endpoints can be serialized to JSON before being sent to the client. It can also be used independently to convert objects for storage in databases that only support JSON.\n\nThe function handles various types, including:\n*   **Pydantic models:** Uses `model_dump` with parameters like `include`, `exclude`, `by_alias`, `exclude_unset`, `exclude_defaults`, and `exclude_none`.\n*   **Dataclasses:** Uses `dataclasses.asdict`.\n*   **Dictionaries:** Recursively encodes keys and values while filtering based on `include`, `exclude`, and `sqlalchemy_safe` (which excludes attributes starting with `_sa`).\n*   **Iterables:** Converts lists, sets, and generators into lists.\n*   **Custom types:** Uses a `custom_encoder` dictionary or the `ENCODERS_BY_TYPE` mapping to handle specific types (e.g., `datetime`, `UUID`, `Enum`, `Decimal`).\n\nFILES: fastapi/encoders.py",
       "citedFiles": [
-        "fastapi/routing.py",
-        "fastapi/dependencies/utils.py"
+        "fastapi/encoders.py"
       ],
       "expectedFiles": [
-        "fastapi/dependencies/utils.py",
-        "fastapi/routing.py"
+        "fastapi/encoders.py"
       ],
       "citationPrecision": 1,
       "citationRecall": 1,
-      "qualityScore": null,
-      "judgeRationale": null,
+      "qualityScore": 5,
+      "judgeRationale": "Accurately describes jsonable_encoder’s conversion of various objects, options, and its use before JSONResponse.",
       "filesInWindow": [
-        "fastapi/dependencies/utils.py",
+        "fastapi/_compat/v2.py",
+        "fastapi/encoders.py",
         "fastapi/routing.py"
       ]
     },
     {
-      "questionId": "q-seed-1",
-      "question": "How does FastAPI resolve and inject dependencies for a route?",
-      "type": "cross-file",
+      "questionId": "f1",
+      "question": "What does the jsonable_encoder function do, and what is it used for?",
+      "type": "factual",
       "strategy": "rerank",
-      "contextTokens": 2206,
-      "promptTokens": 2984,
-      "outputTokens": 308,
-      "costUsd": 0.001208,
-      "latencyMs": 12944,
-      "answer": "FastAPI resolves and injects dependencies through the `solve_dependencies` function. \n\n1. **Initialization**: The process begins in `_FrontendRouteGroup._solve_dependencies`, which manages two `AsyncExitStack` instances (`fastapi_inner_astack` and `fastapi_function_astack`) in the request scope to handle dependency lifecycles.\n2. **Resolution**: `solve_dependencies` iterates through the `dependant.dependencies` list. It executes dependencies (using `_solve_generator` for generators, or calling the function directly/via `run_in_threadpool`) and caches the results.\n3. **Parameter Mapping**: It uses `request_params_to_args` to extract values from path, query, header, and cookie parameters, and `request_body_to_args` for body parameters.\n4. **Injection**: The `Dependant` object (defined in `fastapi/dependencies/models.py`) tracks parameters like `request`, `websocket`, `background_tasks`, `response`, and `security_scopes`. `solve_dependencies` injects these into the `values` dictionary based on the `Dependant` configuration.\n5. **Execution**: Finally, `run_endpoint_function` executes the route handler by passing the resolved `values` dictionary to the `dependant.call`.\n\nFILES: fastapi/dependencies/utils.py, fastapi/dependencies/models.py, fastapi/routing.py",
+      "contextTokens": 2213,
+      "promptTokens": 2839,
+      "outputTokens": 252,
+      "costUsd": 0.00108775,
+      "latencyMs": 18940,
+      "answer": "The `jsonable_encoder` function converts complex Python objects into types that are compatible with JSON serialization. It is used internally by FastAPI to ensure that data returned from path operations can be encoded as JSON before being sent to the client. It can also be used independently to prepare objects for storage in databases that support only JSON.\n\nThe function handles various types, including:\n*   **Pydantic models:** Uses `model_dump` with parameters like `include`, `exclude`, `by_alias`, `exclude_unset`, `exclude_defaults`, and `exclude_none`.\n*   **Dataclasses:** Uses `dataclasses.asdict`.\n*   **Standard types:** Handles dictionaries, lists, sets, and tuples.\n*   **Special types:** Uses `ENCODERS_BY_TYPE` for types like `datetime`, `Decimal` (via `decimal_encoder`), `UUID`, `Enum`, and `Path`.\n*   **SQLAlchemy objects:** Supports a `sqlalchemy_safe` flag to exclude internal attributes starting with `_sa`.\n\nIt also supports custom encoders via the `custom_encoder` parameter.\n\nFILES: fastapi/encoders.py, fastapi/exception_handlers.py",
       "citedFiles": [
-        "fastapi/dependencies/utils.py",
-        "fastapi/dependencies/models.py",
-        "fastapi/routing.py"
+        "fastapi/encoders.py",
+        "fastapi/exception_handlers.py"
       ],
       "expectedFiles": [
-        "fastapi/dependencies/utils.py",
-        "fastapi/routing.py"
+        "fastapi/encoders.py"
       ],
-      "citationPrecision": 0.6666666666666666,
+      "citationPrecision": 0.5,
       "citationRecall": 1,
-      "qualityScore": null,
-      "judgeRationale": null,
+      "qualityScore": 5,
+      "judgeRationale": "Accurately describes jsonable_encoder’s conversion of various objects, its options, and its use before JSONResponse, matching the reference.",
       "filesInWindow": [
-        "fastapi/dependencies/models.py",
-        "fastapi/dependencies/utils.py",
-        "fastapi/routing.py"
+        "fastapi/encoders.py",
+        "fastapi/exception_handlers.py"
       ]
     },
     {
-      "questionId": "q-seed-1",
-      "question": "How does FastAPI resolve and inject dependencies for a route?",
-      "type": "cross-file",
+      "questionId": "f1",
+      "question": "What does the jsonable_encoder function do, and what is it used for?",
+      "type": "factual",
       "strategy": "skeleton",
-      "contextTokens": 18528,
-      "promptTokens": 21964,
-      "outputTokens": 268,
-      "costUsd": 0.005893000000000001,
-      "latencyMs": 9373,
-      "answer": "FastAPI resolves and injects dependencies through the `solve_dependencies` function in `fastapi/dependencies/utils.py`. \n\nWhen a request is handled, the application identifies the `Dependant` object associated with the route. The `solve_dependencies` function iterates through the `dependant.dependencies` list, recursively resolving sub-dependencies. It manages dependency caching using a `dependency_cache` dictionary and handles dependency overrides if a `dependency_overrides_provider` is present.\n\nFor generator-based dependencies, it utilizes `AsyncExitStack` (stored in the request scope as `fastapi_inner_astack` or `fastapi_function_astack`) to manage the lifecycle of the dependency. \n\nThe function populates a `values` dictionary with the resolved results, which are then injected into the endpoint function. It also handles special parameters like `Request`, `WebSocket`, `BackgroundTasks`, `Response`, and `SecurityScopes` by checking the `dependant` attributes (e.g., `request_param_name`, `background_tasks_param_name`). The final result is returned as a `SolvedDependency` object, containing the resolved values, errors, and updated background tasks.\n\nFILES: fastapi/dependencies/utils.py, fastapi/routing.py",
+      "contextTokens": 18970,
+      "promptTokens": 22365,
+      "outputTokens": 276,
+      "costUsd": 0.00600525,
+      "latencyMs": 7585,
+      "answer": "The `jsonable_encoder` function converts any Python object into a format that can be encoded as JSON. It is used internally by FastAPI to ensure that data returned from path operations is JSON-compatible before being sent to the client.\n\nThe function handles various types, including:\n*   **Pydantic models:** Uses `model_dump` to convert them to JSON-compatible dictionaries.\n*   **Dataclasses:** Uses `dataclasses.asdict` to convert them.\n*   **Standard types:** Handles `dict`, `list`, `set`, `tuple`, `Enum`, `PurePath`, and basic types like `str`, `int`, `float`, and `None`.\n*   **Custom types:** Supports custom encoders via the `custom_encoder` parameter and a predefined `ENCODERS_BY_TYPE` mapping (e.g., `datetime`, `Decimal`, `UUID`, `IPv4Address`).\n*   **SQLAlchemy compatibility:** Includes a `sqlalchemy_safe` option to exclude attributes starting with `_sa` from the output.\n\nIt also supports Pydantic-style configuration parameters like `include`, `exclude`, `by_alias`, `exclude_unset`, `exclude_defaults`, and `exclude_none` to control the serialization process.\n\nFILES: fastapi/encoders.py",
       "citedFiles": [
-        "fastapi/dependencies/utils.py",
-        "fastapi/routing.py"
+        "fastapi/encoders.py"
       ],
       "expectedFiles": [
-        "fastapi/dependencies/utils.py",
-        "fastapi/routing.py"
+        "fastapi/encoders.py"
       ],
       "citationPrecision": 1,
       "citationRecall": 1,
-      "qualityScore": null,
-      "judgeRationale": null,
+      "qualityScore": 5,
+      "judgeRationale": "Accurately describes jsonable_encoder’s conversion of various objects, its options, and its use before JSONResponse.",
       "filesInWindow": [
-        "fastapi/dependencies/utils.py",
+        "fastapi/_compat/v2.py",
+        "fastapi/encoders.py",
         "fastapi/routing.py"
       ]
     },
     {
-      "questionId": "q-seed-2",
-      "question": "Where does FastAPI implement OAuth2 password flow?",
+      "questionId": "f2",
+      "question": "What is the BackgroundTasks class and how does it relate to Starlette?",
       "type": "factual",
       "strategy": "full-stuff",
       "contextTokens": 125917,
-      "promptTokens": 126046,
-      "outputTokens": 70,
-      "costUsd": 0.0316165,
-      "latencyMs": 8468,
-      "answer": "The provided repository context does not contain an implementation of the OAuth2 password flow. While the `fastapi/openapi/models.py` file defines `OAuthFlowPassword` as a model for OpenAPI documentation, the actual implementation logic for the OAuth2 password flow is not present in the provided files.\n\nFILES: fastapi/openapi/models.py",
+      "promptTokens": 126052,
+      "outputTokens": 162,
+      "costUsd": 0.031756,
+      "latencyMs": 17998,
+      "answer": "The `BackgroundTasks` class in FastAPI is a collection of background tasks that are executed after a response has been sent to the client. It is defined in `fastapi/background.py` and inherits from `starlette.background.BackgroundTasks`.\n\nBy inheriting from `StarletteBackgroundTasks`, `BackgroundTasks` leverages the underlying functionality provided by Starlette for managing and executing background tasks. The class provides an `add_task` method, which allows you to register a function (either a regular `def` or an `async def` function) to be called in the background after the response is sent.\n\nThis integration allows FastAPI users to utilize the same background task mechanism as Starlette while benefiting from FastAPI's dependency injection and request handling features.\n\nFILES: fastapi/background.py",
       "citedFiles": [
-        "fastapi/openapi/models.py"
+        "fastapi/background.py"
+      ],
+      "expectedFiles": [
+        "fastapi/background.py"
+      ],
+      "citationPrecision": 1,
+      "citationRecall": 1,
+      "qualityScore": 5,
+      "judgeRationale": "Accurately describes BackgroundTasks as a thin subclass of Starlette's class, its purpose, location, and behavior.",
+      "filesInWindow": [
+        "fastapi/__init__.py",
+        "fastapi/__main__.py",
+        "fastapi/_compat/__init__.py",
+        "fastapi/_compat/shared.py",
+        "fastapi/_compat/v2.py",
+        "fastapi/applications.py",
+        "fastapi/background.py",
+        "fastapi/cli.py",
+        "fastapi/concurrency.py",
+        "fastapi/datastructures.py",
+        "fastapi/dependencies/models.py",
+        "fastapi/dependencies/utils.py",
+        "fastapi/encoders.py",
+        "fastapi/exception_handlers.py",
+        "fastapi/exceptions.py",
+        "fastapi/logger.py",
+        "fastapi/middleware/__init__.py",
+        "fastapi/middleware/asyncexitstack.py",
+        "fastapi/middleware/cors.py",
+        "fastapi/middleware/gzip.py",
+        "fastapi/middleware/httpsredirect.py",
+        "fastapi/middleware/trustedhost.py",
+        "fastapi/middleware/wsgi.py",
+        "fastapi/openapi/constants.py",
+        "fastapi/openapi/docs.py",
+        "fastapi/openapi/models.py",
+        "fastapi/openapi/utils.py",
+        "fastapi/param_functions.py",
+        "fastapi/params.py",
+        "fastapi/requests.py",
+        "fastapi/responses.py",
+        "fastapi/routing.py"
+      ]
+    },
+    {
+      "questionId": "f2",
+      "question": "What is the BackgroundTasks class and how does it relate to Starlette?",
+      "type": "factual",
+      "strategy": "top-k",
+      "contextTokens": 1499,
+      "promptTokens": 1909,
+      "outputTokens": 114,
+      "costUsd": 0.0006482500000000001,
+      "latencyMs": 4458,
+      "answer": "The `BackgroundTasks` class in FastAPI is a collection of background tasks designed to be executed after a response has been sent to the client. It provides an `add_task` method that accepts a function (either a regular `def` or an `async def` function) along with its arguments to be scheduled for execution.\n\nThe `BackgroundTasks` class inherits from `StarletteBackgroundTasks`. By extending this class, FastAPI leverages the underlying functionality provided by Starlette for managing and executing background tasks within the ASGI lifecycle.\n\nFILES: fastapi/background.py",
+      "citedFiles": [
+        "fastapi/background.py"
+      ],
+      "expectedFiles": [
+        "fastapi/background.py"
+      ],
+      "citationPrecision": 1,
+      "citationRecall": 1,
+      "qualityScore": 5,
+      "judgeRationale": "Accurately describes BackgroundTasks as a thin subclass of Starlette's class, its add_task method, and that execution behavior comes from Starlette.",
+      "filesInWindow": [
+        "fastapi/applications.py",
+        "fastapi/background.py",
+        "fastapi/concurrency.py",
+        "fastapi/middleware/asyncexitstack.py",
+        "fastapi/routing.py"
+      ]
+    },
+    {
+      "questionId": "f2",
+      "question": "What is the BackgroundTasks class and how does it relate to Starlette?",
+      "type": "factual",
+      "strategy": "rerank",
+      "contextTokens": 1449,
+      "promptTokens": 1829,
+      "outputTokens": 231,
+      "costUsd": 0.00080375,
+      "latencyMs": 16511,
+      "answer": "The `BackgroundTasks` class in FastAPI is a collection of background tasks that are executed after a response has been sent to the client. It inherits from `StarletteBackgroundTasks` (imported from `starlette.background`).\n\nThe class provides an `add_task` method, which allows users to register functions (either regular `def` or `async def`) to be executed in the background. Internally, it delegates this functionality to the `super().add_task` method provided by Starlette.\n\nIn the context of dependency injection, the `solve_dependencies` function in `fastapi/dependencies/utils.py` checks if a `BackgroundTasks` parameter is required by a route. If so, it instantiates `BackgroundTasks` if it does not already exist and includes it in the `SolvedDependency` object. Subsequently, the `_build_response_args` function in `fastapi/routing.py` extracts these background tasks from the `solved_result` to pass them to the response.\n\nFILES: fastapi/background.py, fastapi/dependencies/utils.py, fastapi/routing.py",
+      "citedFiles": [
+        "fastapi/background.py",
+        "fastapi/dependencies/utils.py",
+        "fastapi/routing.py"
+      ],
+      "expectedFiles": [
+        "fastapi/background.py"
+      ],
+      "citationPrecision": 0.3333333333333333,
+      "citationRecall": 1,
+      "qualityScore": 5,
+      "judgeRationale": "Accurately describes BackgroundTasks as a subclass of Starlette's class, its add_task behavior and post-response execution, matching the reference.",
+      "filesInWindow": [
+        "fastapi/__init__.py",
+        "fastapi/applications.py",
+        "fastapi/background.py",
+        "fastapi/dependencies/utils.py",
+        "fastapi/routing.py"
+      ]
+    },
+    {
+      "questionId": "f2",
+      "question": "What is the BackgroundTasks class and how does it relate to Starlette?",
+      "type": "factual",
+      "strategy": "skeleton",
+      "contextTokens": 18038,
+      "promptTokens": 21144,
+      "outputTokens": 119,
+      "costUsd": 0.0054645,
+      "latencyMs": 5313,
+      "answer": "The `BackgroundTasks` class is a collection of background tasks that are executed after a response has been sent to the client. It provides an `add_task` method that accepts a function (either a regular `def` or `async def` function) along with its arguments to be scheduled for execution.\n\nThe `BackgroundTasks` class in FastAPI inherits from `StarletteBackgroundTasks` (imported from `starlette.background`). By inheriting from this class, FastAPI leverages the underlying functionality provided by Starlette to manage and execute these background tasks.\n\nFILES: fastapi/background.py",
+      "citedFiles": [
+        "fastapi/background.py"
+      ],
+      "expectedFiles": [
+        "fastapi/background.py"
+      ],
+      "citationPrecision": 1,
+      "citationRecall": 1,
+      "qualityScore": 5,
+      "judgeRationale": "Accurately describes BackgroundTasks as a thin FastAPI subclass of Starlette's class that runs added callables after the response.",
+      "filesInWindow": [
+        "fastapi/applications.py",
+        "fastapi/background.py",
+        "fastapi/concurrency.py",
+        "fastapi/middleware/asyncexitstack.py",
+        "fastapi/routing.py"
+      ]
+    },
+    {
+      "questionId": "f3",
+      "question": "What does OAuth2PasswordRequestForm collect, and how does it differ from OAuth2PasswordRequestFormStrict?",
+      "type": "factual",
+      "strategy": "full-stuff",
+      "contextTokens": 125917,
+      "promptTokens": 126059,
+      "outputTokens": 75,
+      "costUsd": 0.03162725,
+      "latencyMs": 14744,
+      "answer": "The provided repository context does not contain information about `OAuth2PasswordRequestForm` or `OAuth2PasswordRequestFormStrict`.\n\nFILES: fastapi/__init__.py, fastapi/applications.py, fastapi/dependencies/models.py, fastapi/dependencies/utils.py, fastapi/routing.py, fastapi/param_functions.py, fastapi/params.py",
+      "citedFiles": [
+        "fastapi/__init__.py",
+        "fastapi/applications.py",
+        "fastapi/dependencies/models.py",
+        "fastapi/dependencies/utils.py",
+        "fastapi/routing.py",
+        "fastapi/param_functions.py",
+        "fastapi/params.py"
       ],
       "expectedFiles": [
         "fastapi/security/oauth2.py"
       ],
       "citationPrecision": 0,
       "citationRecall": 0,
-      "qualityScore": null,
-      "judgeRationale": null,
+      "qualityScore": 0,
+      "judgeRationale": "The answer incorrectly claims no information exists, missing the correct details about the collected fields and strictness.",
       "filesInWindow": [
         "fastapi/__init__.py",
         "fastapi/__main__.py",
@@ -209,43 +352,16 @@
       ]
     },
     {
-      "questionId": "q-seed-2",
-      "question": "Where does FastAPI implement OAuth2 password flow?",
+      "questionId": "f3",
+      "question": "What does OAuth2PasswordRequestForm collect, and how does it differ from OAuth2PasswordRequestFormStrict?",
       "type": "factual",
       "strategy": "top-k",
-      "contextTokens": 1569,
-      "promptTokens": 1873,
-      "outputTokens": 218,
-      "costUsd": 0.0007952500000000001,
-      "latencyMs": 8421,
-      "answer": "FastAPI implements the OAuth2 password flow through several classes located in `fastapi/security/oauth2.py`:\n\n*   **`OAuth2PasswordBearer`**: A class used as a dependency to handle the OAuth2 flow for authentication using a bearer token obtained with a password.\n*   **`OAuth2PasswordRequestForm`**: A dependency class used to collect `username` and `password` as form data for the password flow.\n*   **`OAuth2PasswordRequestFormStrict`**: A stricter version of `OAuth2PasswordRequestForm` that requires the `grant_type` field to be set to `\"password\"`, as mandated by the OAuth2 specification.\n*   **`OAuth2`**: The base class from which these authentication classes inherit.\n\nAdditionally, `fastapi/openapi/models.py` defines the `OAuthFlowPassword` class, which represents the password flow model for OpenAPI documentation, containing the `tokenUrl` field.\n\nFILES: fastapi/security/oauth2.py, fastapi/openapi/models.py",
-      "citedFiles": [
-        "fastapi/security/oauth2.py",
-        "fastapi/openapi/models.py"
-      ],
-      "expectedFiles": [
-        "fastapi/security/oauth2.py"
-      ],
-      "citationPrecision": 0.5,
-      "citationRecall": 1,
-      "qualityScore": null,
-      "judgeRationale": null,
-      "filesInWindow": [
-        "fastapi/openapi/models.py",
-        "fastapi/security/oauth2.py"
-      ]
-    },
-    {
-      "questionId": "q-seed-2",
-      "question": "Where does FastAPI implement OAuth2 password flow?",
-      "type": "factual",
-      "strategy": "rerank",
-      "contextTokens": 2946,
-      "promptTokens": 3489,
-      "outputTokens": 170,
-      "costUsd": 0.00112725,
-      "latencyMs": 5649,
-      "answer": "FastAPI implements the OAuth2 password flow using the following classes in `fastapi/security/oauth2.py`:\n\n1.  **`OAuth2PasswordBearer`**: Used as a dependency to handle the bearer token authentication.\n2.  **`OAuth2PasswordRequestForm`**: A dependency class used to collect `username` and `password` as form data. It is permissive regarding the `grant_type` field.\n3.  **`OAuth2PasswordRequestFormStrict`**: A subclass of `OAuth2PasswordRequestForm` that strictly enforces the `grant_type` field to be the string `\"password\"`, as required by the OAuth2 specification.\n\nThese classes are designed to be used as dependencies in path operations to manage authentication and token requests.\n\nFILES: fastapi/security/oauth2.py",
+      "contextTokens": 2947,
+      "promptTokens": 3502,
+      "outputTokens": 175,
+      "costUsd": 0.001138,
+      "latencyMs": 18974,
+      "answer": "`OAuth2PasswordRequestForm` is a dependency class used to collect `username` and `password` as form data for an OAuth2 password flow. It also collects optional fields: `grant_type`, `scope`, `client_id`, and `client_secret`.\n\nThe primary difference is how they handle the `grant_type` field:\n*   **`OAuth2PasswordRequestForm`**: The `grant_type` field is optional.\n*   **`OAuth2PasswordRequestFormStrict`**: This class is strict and requires the client to send the `grant_type` field with the value `\"password\"`, as dictated by the OAuth2 specification.\n\nBoth classes extract these parameters from the request using `Form` and are designed for use as dependencies in FastAPI path operations.\n\nFILES: fastapi/security/oauth2.py",
       "citedFiles": [
         "fastapi/security/oauth2.py"
       ],
@@ -254,63 +370,1075 @@
       ],
       "citationPrecision": 1,
       "citationRecall": 1,
-      "qualityScore": null,
-      "judgeRationale": null,
+      "qualityScore": 4,
+      "judgeRationale": "Correctly lists fields and strict vs optional grant_type, but omits the detail that scope is split into a list.",
       "filesInWindow": [
         "fastapi/security/oauth2.py"
       ]
     },
     {
-      "questionId": "q-seed-2",
-      "question": "Where does FastAPI implement OAuth2 password flow?",
+      "questionId": "f3",
+      "question": "What does OAuth2PasswordRequestForm collect, and how does it differ from OAuth2PasswordRequestFormStrict?",
+      "type": "factual",
+      "strategy": "rerank",
+      "contextTokens": 2947,
+      "promptTokens": 3502,
+      "outputTokens": 197,
+      "costUsd": 0.001171,
+      "latencyMs": 7780,
+      "answer": "`OAuth2PasswordRequestForm` is a dependency class used to collect OAuth2 password flow data from form fields. It collects `username`, `password`, `grant_type` (optional), `scope`, `client_id`, and `client_secret`.\n\nThe primary difference is how they handle the `grant_type` field:\n*   **`OAuth2PasswordRequestForm`**: The `grant_type` field is optional. It is permissive and does not enforce the presence of this field.\n*   **`OAuth2PasswordRequestFormStrict`**: This class inherits from `OAuth2PasswordRequestForm` but enforces that the client must send the `grant_type` field with the exact value `\"password\"`, as required by the OAuth2 specification.\n\nBoth classes process the `scope` input by splitting the provided string into a list of individual scopes stored in the `scopes` attribute.\n\nFILES: fastapi/security/oauth2.py",
+      "citedFiles": [
+        "fastapi/security/oauth2.py"
+      ],
+      "expectedFiles": [
+        "fastapi/security/oauth2.py"
+      ],
+      "citationPrecision": 1,
+      "citationRecall": 1,
+      "qualityScore": 5,
+      "judgeRationale": "Accurately lists all collected fields and correctly explains the strict form’s requirement for grant_type='password' and scope handling.",
+      "filesInWindow": [
+        "fastapi/security/oauth2.py"
+      ]
+    },
+    {
+      "questionId": "f3",
+      "question": "What does OAuth2PasswordRequestForm collect, and how does it differ from OAuth2PasswordRequestFormStrict?",
       "type": "factual",
       "strategy": "skeleton",
-      "contextTokens": 18108,
-      "promptTokens": 21108,
-      "outputTokens": 211,
-      "costUsd": 0.0055934999999999995,
-      "latencyMs": 16589,
-      "answer": "FastAPI implements the OAuth2 password flow through several classes located in `fastapi/security/oauth2.py`:\n\n*   **`OAuth2PasswordBearer`**: Used as a dependency to handle the bearer token authentication flow for OAuth2 password authentication.\n*   **`OAuth2PasswordRequestForm`**: A dependency class used to collect `username` and `password` from form data as required by the OAuth2 specification for the password flow.\n*   **`OAuth2PasswordRequestFormStrict`**: A stricter version of `OAuth2PasswordRequestForm` that requires the `grant_type` field to be explicitly set to `\"password\"`.\n\nAdditionally, the base class `OAuth2` in `fastapi/security/oauth2.py` provides the foundation for these flows, and `OAuthFlowPassword` in `fastapi/openapi/models.py` defines the schema for the password flow in the OpenAPI documentation.\n\nFILES: fastapi/security/oauth2.py, fastapi/openapi/models.py",
+      "contextTokens": 19486,
+      "promptTokens": 22737,
+      "outputTokens": 180,
+      "costUsd": 0.00595425,
+      "latencyMs": 4992,
+      "answer": "`OAuth2PasswordRequestForm` is a dependency class used to collect `username` and `password` as form data for an OAuth2 password flow. It also collects optional `grant_type`, `scope` (as a space-separated string), `client_id`, and `client_secret`.\n\nThe primary difference is how they handle the `grant_type` field:\n*   **`OAuth2PasswordRequestForm`**: The `grant_type` is optional (defaults to `None`). It is permissive regarding the OAuth2 specification.\n*   **`OAuth2PasswordRequestFormStrict`**: The `grant_type` is required and must be the exact string `\"password\"`. It enforces the OAuth2 specification strictly.\n\nBoth classes are defined in `fastapi/security/oauth2.py`.\n\nFILES: fastapi/security/oauth2.py",
+      "citedFiles": [
+        "fastapi/security/oauth2.py"
+      ],
+      "expectedFiles": [
+        "fastapi/security/oauth2.py"
+      ],
+      "citationPrecision": 1,
+      "citationRecall": 1,
+      "qualityScore": 4,
+      "judgeRationale": "Correctly lists the fields and the grant_type behavior difference, but omits the detail that the scope string is split into a list.",
+      "filesInWindow": [
+        "fastapi/security/oauth2.py"
+      ]
+    },
+    {
+      "questionId": "f4",
+      "question": "What does get_typed_signature do and why is it needed?",
+      "type": "factual",
+      "strategy": "full-stuff",
+      "contextTokens": 125917,
+      "promptTokens": 126051,
+      "outputTokens": 110,
+      "costUsd": 0.03167775,
+      "latencyMs": 10242,
+      "answer": "`get_typed_signature` retrieves the signature of a callable, including its type annotations, and resolves any forward references within those annotations.\n\nIt is needed because `inspect.signature` does not automatically resolve string-based type annotations (forward references) into their actual types. By using `get_typed_signature`, FastAPI ensures that type hints are fully evaluated using the callable's global namespace, allowing the framework to correctly inspect and validate parameters and return types during dependency injection and request handling.\n\nFILES: fastapi/dependencies/utils.py",
+      "citedFiles": [
+        "fastapi/dependencies/utils.py"
+      ],
+      "expectedFiles": [
+        "fastapi/dependencies/utils.py"
+      ],
+      "citationPrecision": 1,
+      "citationRecall": 1,
+      "qualityScore": 5,
+      "judgeRationale": "Accurately describes that it returns a signature with annotations resolved against globals and why this is required for handling string/forward references.",
+      "filesInWindow": [
+        "fastapi/__init__.py",
+        "fastapi/__main__.py",
+        "fastapi/_compat/__init__.py",
+        "fastapi/_compat/shared.py",
+        "fastapi/_compat/v2.py",
+        "fastapi/applications.py",
+        "fastapi/background.py",
+        "fastapi/cli.py",
+        "fastapi/concurrency.py",
+        "fastapi/datastructures.py",
+        "fastapi/dependencies/models.py",
+        "fastapi/dependencies/utils.py",
+        "fastapi/encoders.py",
+        "fastapi/exception_handlers.py",
+        "fastapi/exceptions.py",
+        "fastapi/logger.py",
+        "fastapi/middleware/__init__.py",
+        "fastapi/middleware/asyncexitstack.py",
+        "fastapi/middleware/cors.py",
+        "fastapi/middleware/gzip.py",
+        "fastapi/middleware/httpsredirect.py",
+        "fastapi/middleware/trustedhost.py",
+        "fastapi/middleware/wsgi.py",
+        "fastapi/openapi/constants.py",
+        "fastapi/openapi/docs.py",
+        "fastapi/openapi/models.py",
+        "fastapi/openapi/utils.py",
+        "fastapi/param_functions.py",
+        "fastapi/params.py",
+        "fastapi/requests.py",
+        "fastapi/responses.py",
+        "fastapi/routing.py"
+      ]
+    },
+    {
+      "questionId": "f4",
+      "question": "What does get_typed_signature do and why is it needed?",
+      "type": "factual",
+      "strategy": "top-k",
+      "contextTokens": 1593,
+      "promptTokens": 2179,
+      "outputTokens": 213,
+      "costUsd": 0.00086425,
+      "latencyMs": 5904,
+      "answer": "The `get_typed_signature` function retrieves an `inspect.Signature` object for a given callable, where all parameter annotations are resolved to their actual types. \n\nIt performs the following steps:\n1. It calls `_get_signature` to obtain the raw signature of the callable.\n2. It unwraps the callable using `inspect.unwrap` to access its global namespace.\n3. It iterates through the parameters, creating new `inspect.Parameter` objects where the `annotation` is processed by `get_typed_annotation`.\n4. It returns a new `inspect.Signature` containing these resolved, typed parameters.\n\nThis is needed because FastAPI relies on type annotations to perform dependency injection and data validation. By resolving annotations (including `ForwardRef` objects) into their actual types using the callable's global namespace, FastAPI ensures that it can correctly interpret the requirements of the endpoint or dependency, even when string-based forward references or complex type hints are used.\n\nFILES: fastapi/dependencies/utils.py",
+      "citedFiles": [
+        "fastapi/dependencies/utils.py"
+      ],
+      "expectedFiles": [
+        "fastapi/dependencies/utils.py"
+      ],
+      "citationPrecision": 1,
+      "citationRecall": 1,
+      "qualityScore": 5,
+      "judgeRationale": "Accurately describes that it returns a signature with annotations resolved via get_typed_annotation and explains why this resolution is required.",
+      "filesInWindow": [
+        "fastapi/dependencies/models.py",
+        "fastapi/dependencies/utils.py"
+      ]
+    },
+    {
+      "questionId": "f4",
+      "question": "What does get_typed_signature do and why is it needed?",
+      "type": "factual",
+      "strategy": "rerank",
+      "contextTokens": 1469,
+      "promptTokens": 2034,
+      "outputTokens": 196,
+      "costUsd": 0.0008024999999999999,
+      "latencyMs": 5628,
+      "answer": "The `get_typed_signature` function retrieves an `inspect.Signature` object for a given callable where all parameter annotations have been resolved to their actual types. \n\nIt performs the following steps:\n1. Calls `_get_signature` to obtain the raw signature of the callable.\n2. Unwraps the callable using `inspect.unwrap`.\n3. Iterates through the signature's parameters, creating new `inspect.Parameter` objects.\n4. Uses `get_typed_annotation` to resolve string-based annotations (like `ForwardRef`) into actual types using the callable's `__globals__` namespace.\n\nThis is needed because FastAPI relies on type annotations to perform dependency injection and request validation. By resolving these annotations into concrete types, the framework can correctly interpret dependencies and validate input data even when forward references or string-based type hints are used in the function signature.\n\nFILES: fastapi/dependencies/utils.py",
+      "citedFiles": [
+        "fastapi/dependencies/utils.py"
+      ],
+      "expectedFiles": [
+        "fastapi/dependencies/utils.py"
+      ],
+      "citationPrecision": 1,
+      "citationRecall": 1,
+      "qualityScore": 5,
+      "judgeRationale": "Accurately describes that it returns a signature with annotations resolved via get_typed_annotation and explains why this resolution is required.",
+      "filesInWindow": [
+        "fastapi/_compat/v2.py",
+        "fastapi/dependencies/utils.py",
+        "fastapi/routing.py"
+      ]
+    },
+    {
+      "questionId": "f4",
+      "question": "What does get_typed_signature do and why is it needed?",
+      "type": "factual",
+      "strategy": "skeleton",
+      "contextTokens": 18132,
+      "promptTokens": 21414,
+      "outputTokens": 212,
+      "costUsd": 0.0056714999999999995,
+      "latencyMs": 6400,
+      "answer": "The `get_typed_signature` function retrieves the signature of a callable while resolving its type annotations. It is defined in `fastapi/dependencies/utils.py`.\n\nIt performs the following steps:\n1. It obtains the raw signature using `_get_signature`.\n2. It unwraps the callable using `inspect.unwrap` to access the original function.\n3. It retrieves the function's global namespace (`__globals__`).\n4. It iterates through the parameters of the signature and creates new `inspect.Parameter` objects, replacing the original annotations with resolved versions generated by `get_typed_annotation`.\n\nThis is needed because FastAPI relies on type annotations to perform dependency injection, validation, and OpenAPI schema generation. Since annotations can be defined as strings (e.g., forward references), `get_typed_signature` ensures these are evaluated into actual types using the function's global namespace, allowing FastAPI to correctly inspect and process the types at runtime.\n\nFILES: fastapi/dependencies/utils.py",
+      "citedFiles": [
+        "fastapi/dependencies/utils.py"
+      ],
+      "expectedFiles": [
+        "fastapi/dependencies/utils.py"
+      ],
+      "citationPrecision": 1,
+      "citationRecall": 1,
+      "qualityScore": 5,
+      "judgeRationale": "Accurately describes that it returns a signature with annotations resolved via globals to handle string annotations.",
+      "filesInWindow": [
+        "fastapi/dependencies/models.py",
+        "fastapi/dependencies/utils.py"
+      ]
+    },
+    {
+      "questionId": "f5",
+      "question": "What is the SecurityScopes class for?",
+      "type": "factual",
+      "strategy": "full-stuff",
+      "contextTokens": 125917,
+      "promptTokens": 126045,
+      "outputTokens": 127,
+      "costUsd": 0.03170175,
+      "latencyMs": 9987,
+      "answer": "The `SecurityScopes` class is used to manage and store OAuth2 scopes required for a *path operation*. It is integrated with OpenAPI, making these scopes visible in the generated OpenAPI specification and the automatic interactive API documentation (e.g., `/docs`).\n\nWhen a dependency uses `Security` (which inherits from `Depends`), it can declare a list of scopes. The `SecurityScopes` object is then injected into the endpoint, allowing the application to access the required scopes for that specific operation.\n\nFILES: fastapi/dependencies/utils.py, fastapi/security/oauth2.py, fastapi/param_functions.py",
+      "citedFiles": [
+        "fastapi/dependencies/utils.py",
+        "fastapi/security/oauth2.py",
+        "fastapi/param_functions.py"
+      ],
+      "expectedFiles": [
+        "fastapi/security/oauth2.py"
+      ],
+      "citationPrecision": 0.3333333333333333,
+      "citationRecall": 1,
+      "qualityScore": 3,
+      "judgeRationale": "Mentions OAuth2 scopes and injection but omits the union-of-scopes behavior and adds unrelated OpenAPI details.",
+      "filesInWindow": [
+        "fastapi/__init__.py",
+        "fastapi/__main__.py",
+        "fastapi/_compat/__init__.py",
+        "fastapi/_compat/shared.py",
+        "fastapi/_compat/v2.py",
+        "fastapi/applications.py",
+        "fastapi/background.py",
+        "fastapi/cli.py",
+        "fastapi/concurrency.py",
+        "fastapi/datastructures.py",
+        "fastapi/dependencies/models.py",
+        "fastapi/dependencies/utils.py",
+        "fastapi/encoders.py",
+        "fastapi/exception_handlers.py",
+        "fastapi/exceptions.py",
+        "fastapi/logger.py",
+        "fastapi/middleware/__init__.py",
+        "fastapi/middleware/asyncexitstack.py",
+        "fastapi/middleware/cors.py",
+        "fastapi/middleware/gzip.py",
+        "fastapi/middleware/httpsredirect.py",
+        "fastapi/middleware/trustedhost.py",
+        "fastapi/middleware/wsgi.py",
+        "fastapi/openapi/constants.py",
+        "fastapi/openapi/docs.py",
+        "fastapi/openapi/models.py",
+        "fastapi/openapi/utils.py",
+        "fastapi/param_functions.py",
+        "fastapi/params.py",
+        "fastapi/requests.py",
+        "fastapi/responses.py",
+        "fastapi/routing.py"
+      ]
+    },
+    {
+      "questionId": "f5",
+      "question": "What is the SecurityScopes class for?",
+      "type": "factual",
+      "strategy": "top-k",
+      "contextTokens": 1584,
+      "promptTokens": 1938,
+      "outputTokens": 105,
+      "costUsd": 0.000642,
+      "latencyMs": 5140,
+      "answer": "The `SecurityScopes` class is a special dependency parameter used to obtain the OAuth2 scopes required by all dependencies within the same chain for a given *path operation*. \n\nIt allows you to aggregate and access all scopes required across multiple dependencies in a single location. When initialized, it stores the list of required scopes in `self.scopes` and provides a space-separated string of these scopes in `self.scope_str`, adhering to the OAuth2 specification.\n\nFILES: fastapi/security/oauth2.py",
+      "citedFiles": [
+        "fastapi/security/oauth2.py"
+      ],
+      "expectedFiles": [
+        "fastapi/security/oauth2.py"
+      ],
+      "citationPrecision": 1,
+      "citationRecall": 1,
+      "qualityScore": 5,
+      "judgeRationale": "Accurately describes SecurityScopes as a dependency-injectable class that aggregates required OAuth2 scopes, includes scopes list and scope_str, matching the reference.",
+      "filesInWindow": [
+        "fastapi/dependencies/models.py",
+        "fastapi/param_functions.py",
+        "fastapi/params.py",
+        "fastapi/security/__init__.py",
+        "fastapi/security/base.py",
+        "fastapi/security/oauth2.py"
+      ]
+    },
+    {
+      "questionId": "f5",
+      "question": "What is the SecurityScopes class for?",
+      "type": "factual",
+      "strategy": "rerank",
+      "contextTokens": 1576,
+      "promptTokens": 2047,
+      "outputTokens": 174,
+      "costUsd": 0.00077275,
+      "latencyMs": 4607,
+      "answer": "The `SecurityScopes` class is a special class used in dependency parameters to obtain the OAuth2 scopes required by all dependencies within the same chain. It allows multiple dependencies with different scopes, used in the same path operation, to aggregate and access all required scopes in a single location.\n\nWhen initialized, it stores a list of scopes in `self.scopes` and provides a space-separated string of these scopes in `self.scope_str`, as defined by the OAuth2 specification. During dependency resolution, the `solve_dependencies` function in `fastapi/dependencies/utils.py` populates this class by calling `_get_oauth_scopes` to collect the necessary scopes from the `Dependant` object.\n\nFILES: fastapi/security/oauth2.py, fastapi/dependencies/utils.py, fastapi/dependencies/models.py",
       "citedFiles": [
         "fastapi/security/oauth2.py",
-        "fastapi/openapi/models.py"
+        "fastapi/dependencies/utils.py",
+        "fastapi/dependencies/models.py"
+      ],
+      "expectedFiles": [
+        "fastapi/security/oauth2.py"
+      ],
+      "citationPrecision": 0.3333333333333333,
+      "citationRecall": 1,
+      "qualityScore": 5,
+      "judgeRationale": "Accurately describes SecurityScopes as a dependency‑injectable class that aggregates OAuth2 scopes, mentions its scopes list and scope_str, and correctly notes FastAPI populates it automatically.",
+      "filesInWindow": [
+        "fastapi/dependencies/models.py",
+        "fastapi/dependencies/utils.py",
+        "fastapi/openapi/utils.py",
+        "fastapi/security/oauth2.py"
+      ]
+    },
+    {
+      "questionId": "f5",
+      "question": "What is the SecurityScopes class for?",
+      "type": "factual",
+      "strategy": "skeleton",
+      "contextTokens": 18123,
+      "promptTokens": 21173,
+      "outputTokens": 157,
+      "costUsd": 0.00552875,
+      "latencyMs": 5012,
+      "answer": "The `SecurityScopes` class is a special class that can be defined as a parameter in a dependency to obtain the OAuth2 scopes required by all dependencies in the same chain. \n\nIt allows multiple dependencies to have different scopes, even when used in the same path operation, and provides a single place to access all required scopes. When used, it populates:\n* `self.scopes`: A list of all scopes required by the dependencies.\n* `self.scope_str`: A single string containing all required scopes, separated by spaces, as defined in the OAuth2 specification.\n\nFastAPI automatically fills the `scopes` parameter when the class is used in a dependency.\n\nFILES: fastapi/security/oauth2.py, fastapi/security/__init__.py",
+      "citedFiles": [
+        "fastapi/security/oauth2.py",
+        "fastapi/security/__init__.py"
       ],
       "expectedFiles": [
         "fastapi/security/oauth2.py"
       ],
       "citationPrecision": 0.5,
       "citationRecall": 1,
-      "qualityScore": null,
-      "judgeRationale": null,
+      "qualityScore": 5,
+      "judgeRationale": "Accurately describes SecurityScopes as a dependency‑injectable class exposing the combined OAuth2 scopes with correct attributes and automatic population.",
       "filesInWindow": [
-        "fastapi/openapi/models.py",
+        "fastapi/dependencies/models.py",
+        "fastapi/param_functions.py",
+        "fastapi/params.py",
+        "fastapi/security/__init__.py",
+        "fastapi/security/base.py",
         "fastapi/security/oauth2.py"
       ]
     },
     {
-      "questionId": "q-seed-3",
-      "question": "How does the OpenAPI schema get generated and served?",
+      "questionId": "x1",
+      "question": "Where is solve_dependencies called from, and what happens to the values it returns?",
+      "type": "cross-file",
+      "strategy": "full-stuff",
+      "contextTokens": 125917,
+      "promptTokens": 126054,
+      "outputTokens": 228,
+      "costUsd": 0.0318555,
+      "latencyMs": 10690,
+      "answer": "`solve_dependencies` is called from two locations:\n\n1.  **`fastapi/dependencies/utils.py`**: Inside `solve_dependencies` itself, it is called recursively to resolve sub-dependencies. The returned `SolvedDependency` object contains `values` (the resolved dependencies), `errors` (any validation errors), `background_tasks`, and a `response` object. These are aggregated and passed up the dependency tree.\n2.  **`fastapi/routing.py`**:\n    *   Inside `get_request_handler` (for HTTP requests), it is called to resolve all dependencies for a path operation. The returned `values` are used to call the endpoint function (via `run_endpoint_function`), and the `background_tasks` and `response` are used to construct the final response.\n    *   Inside `get_websocket_app` (for WebSockets), it is called to resolve dependencies. The returned `values` are used to call the WebSocket endpoint function.\n\nFILES: fastapi/dependencies/utils.py, fastapi/routing.py",
+      "citedFiles": [
+        "fastapi/dependencies/utils.py",
+        "fastapi/routing.py"
+      ],
+      "expectedFiles": [
+        "fastapi/dependencies/utils.py",
+        "fastapi/routing.py"
+      ],
+      "citationPrecision": 1,
+      "citationRecall": 1,
+      "qualityScore": 4,
+      "judgeRationale": "Correctly identifies the call from routing.py and the returned values usage, but adds unnecessary websocket detail not in the reference.",
+      "filesInWindow": [
+        "fastapi/__init__.py",
+        "fastapi/__main__.py",
+        "fastapi/_compat/__init__.py",
+        "fastapi/_compat/shared.py",
+        "fastapi/_compat/v2.py",
+        "fastapi/applications.py",
+        "fastapi/background.py",
+        "fastapi/cli.py",
+        "fastapi/concurrency.py",
+        "fastapi/datastructures.py",
+        "fastapi/dependencies/models.py",
+        "fastapi/dependencies/utils.py",
+        "fastapi/encoders.py",
+        "fastapi/exception_handlers.py",
+        "fastapi/exceptions.py",
+        "fastapi/logger.py",
+        "fastapi/middleware/__init__.py",
+        "fastapi/middleware/asyncexitstack.py",
+        "fastapi/middleware/cors.py",
+        "fastapi/middleware/gzip.py",
+        "fastapi/middleware/httpsredirect.py",
+        "fastapi/middleware/trustedhost.py",
+        "fastapi/middleware/wsgi.py",
+        "fastapi/openapi/constants.py",
+        "fastapi/openapi/docs.py",
+        "fastapi/openapi/models.py",
+        "fastapi/openapi/utils.py",
+        "fastapi/param_functions.py",
+        "fastapi/params.py",
+        "fastapi/requests.py",
+        "fastapi/responses.py",
+        "fastapi/routing.py"
+      ]
+    },
+    {
+      "questionId": "x1",
+      "question": "Where is solve_dependencies called from, and what happens to the values it returns?",
+      "type": "cross-file",
+      "strategy": "top-k",
+      "contextTokens": 2401,
+      "promptTokens": 3310,
+      "outputTokens": 176,
+      "costUsd": 0.0010915,
+      "latencyMs": 5946,
+      "answer": "`solve_dependencies` is called from `_FrontendRouteGroup._solve_dependencies` in `fastapi/routing.py`. \n\nWhen `solve_dependencies` returns a `SolvedDependency` object:\n1. The `_FrontendRouteGroup._solve_dependencies` method checks the `errors` attribute of the returned object. If any errors exist, it raises a `RequestValidationError`.\n2. If no errors are present, the `SolvedDependency` object is yielded to the caller.\n\nWithin `solve_dependencies` itself, the function recursively calls itself to resolve sub-dependencies. The returned `SolvedDependency` values are used to update the `values` dictionary (containing resolved dependencies and request parameters), extend the `errors` list, and update `background_tasks`.\n\nFILES: fastapi/dependencies/utils.py, fastapi/routing.py",
+      "citedFiles": [
+        "fastapi/dependencies/utils.py",
+        "fastapi/routing.py"
+      ],
+      "expectedFiles": [
+        "fastapi/dependencies/utils.py",
+        "fastapi/routing.py"
+      ],
+      "citationPrecision": 1,
+      "citationRecall": 1,
+      "qualityScore": 2,
+      "judgeRationale": "Mentions the correct modules but misidentifies the calling location and mishandles how the returned values are used.",
+      "filesInWindow": [
+        "fastapi/dependencies/utils.py",
+        "fastapi/routing.py"
+      ]
+    },
+    {
+      "questionId": "x1",
+      "question": "Where is solve_dependencies called from, and what happens to the values it returns?",
+      "type": "cross-file",
+      "strategy": "rerank",
+      "contextTokens": 2102,
+      "promptTokens": 2905,
+      "outputTokens": 195,
+      "costUsd": 0.0010187500000000001,
+      "latencyMs": 4701,
+      "answer": "`solve_dependencies` is called from `_FrontendRouteGroup._solve_dependencies` in `fastapi/routing.py`. \n\nWhen called, `_solve_dependencies` checks the `solved_result.errors` attribute of the returned `SolvedDependency` object. If errors exist, it raises a `RequestValidationError`. If no errors are present, it yields the `SolvedDependency` object to the caller.\n\nWithin `solve_dependencies` itself, the function is also called recursively to resolve sub-dependencies. The returned `SolvedDependency` object contains a `values` dictionary, which is populated with resolved dependency results, as well as `background_tasks`, `response`, and `dependency_cache` objects. These values are used to update the local `values` dictionary and `errors` list, which are then returned in a new `SolvedDependency` instance.\n\nFILES: fastapi/dependencies/utils.py, fastapi/routing.py",
+      "citedFiles": [
+        "fastapi/dependencies/utils.py",
+        "fastapi/routing.py"
+      ],
+      "expectedFiles": [
+        "fastapi/dependencies/utils.py",
+        "fastapi/routing.py"
+      ],
+      "citationPrecision": 1,
+      "citationRecall": 1,
+      "qualityScore": 2,
+      "judgeRationale": "Misidentifies the call site and adds inaccurate details about yielding, though it mentions the returned SolvedDependency contents.",
+      "filesInWindow": [
+        "fastapi/dependencies/models.py",
+        "fastapi/dependencies/utils.py",
+        "fastapi/routing.py"
+      ]
+    },
+    {
+      "questionId": "x1",
+      "question": "Where is solve_dependencies called from, and what happens to the values it returns?",
+      "type": "cross-file",
+      "strategy": "skeleton",
+      "contextTokens": 18940,
+      "promptTokens": 22545,
+      "outputTokens": 276,
+      "costUsd": 0.00605025,
+      "latencyMs": 6258,
+      "answer": "`solve_dependencies` is called from two primary locations:\n\n1.  **`fastapi/dependencies/utils.py`**: It is called recursively within `solve_dependencies` itself (lines 622-634) to resolve sub-dependencies. The returned `SolvedDependency` object is used to update `background_tasks`, collect `errors`, and cache the result in `dependency_cache`.\n2.  **`fastapi/routing.py`**: It is called within the `_solve_dependencies` async context manager of the `_FrontendRouteGroup` class (lines 2232-2240).\n\nWhen `solve_dependencies` returns a `SolvedDependency` object:\n*   The `values` dictionary (containing resolved dependencies and request parameters) is used to populate arguments for the endpoint or subsequent dependencies.\n*   The `errors` list is checked; if not empty, it may trigger a `RequestValidationError`.\n*   The `background_tasks` are updated to ensure tasks are collected across the dependency tree.\n*   The `dependency_cache` is updated to store results for future use within the same request scope.\n*   The `response` object is passed through or returned.\n\nFILES: fastapi/dependencies/utils.py, fastapi/routing.py",
+      "citedFiles": [
+        "fastapi/dependencies/utils.py",
+        "fastapi/routing.py"
+      ],
+      "expectedFiles": [
+        "fastapi/dependencies/utils.py",
+        "fastapi/routing.py"
+      ],
+      "citationPrecision": 1,
+      "citationRecall": 1,
+      "qualityScore": 3,
+      "judgeRationale": "Mentions routing call and returned values correctly but adds incorrect extra call location and details.",
+      "filesInWindow": [
+        "fastapi/dependencies/utils.py",
+        "fastapi/routing.py"
+      ]
+    },
+    {
+      "questionId": "x2",
+      "question": "What is the request_response function in routing.py, and where is its result used?",
+      "type": "cross-file",
+      "strategy": "full-stuff",
+      "contextTokens": 125917,
+      "promptTokens": 126056,
+      "outputTokens": 173,
+      "costUsd": 0.0317735,
+      "latencyMs": 8721,
+      "answer": "The `request_response` function in `fastapi/routing.py` is a wrapper that takes a function or coroutine `func(request) -> response` and returns an ASGI application. It is a modified version of the Starlette equivalent, updated to include `AsyncExitStack` context managers for managing request and function lifecycles, which ensures that dependencies (especially those using `yield`) are properly handled and closed.\n\nThe result of `request_response` is used as the `self.app` attribute for the `APIRoute` class. When an `APIRoute` is initialized, it calls `self.get_route_handler()` to obtain the request handler and passes it to `request_response` to create the ASGI application that handles incoming HTTP requests for that specific route.\n\nFILES: fastapi/routing.py",
+      "citedFiles": [
+        "fastapi/routing.py"
+      ],
+      "expectedFiles": [
+        "fastapi/routing.py"
+      ],
+      "citationPrecision": 1,
+      "citationRecall": 1,
+      "qualityScore": 4,
+      "judgeRationale": "Correctly identifies it as a Starlette‑based wrapper used to set APIRoute.self.app, but adds inaccurate details about AsyncExitStack and omits the endpoint‑context nuance.",
+      "filesInWindow": [
+        "fastapi/__init__.py",
+        "fastapi/__main__.py",
+        "fastapi/_compat/__init__.py",
+        "fastapi/_compat/shared.py",
+        "fastapi/_compat/v2.py",
+        "fastapi/applications.py",
+        "fastapi/background.py",
+        "fastapi/cli.py",
+        "fastapi/concurrency.py",
+        "fastapi/datastructures.py",
+        "fastapi/dependencies/models.py",
+        "fastapi/dependencies/utils.py",
+        "fastapi/encoders.py",
+        "fastapi/exception_handlers.py",
+        "fastapi/exceptions.py",
+        "fastapi/logger.py",
+        "fastapi/middleware/__init__.py",
+        "fastapi/middleware/asyncexitstack.py",
+        "fastapi/middleware/cors.py",
+        "fastapi/middleware/gzip.py",
+        "fastapi/middleware/httpsredirect.py",
+        "fastapi/middleware/trustedhost.py",
+        "fastapi/middleware/wsgi.py",
+        "fastapi/openapi/constants.py",
+        "fastapi/openapi/docs.py",
+        "fastapi/openapi/models.py",
+        "fastapi/openapi/utils.py",
+        "fastapi/param_functions.py",
+        "fastapi/params.py",
+        "fastapi/requests.py",
+        "fastapi/responses.py",
+        "fastapi/routing.py"
+      ]
+    },
+    {
+      "questionId": "x2",
+      "question": "What is the request_response function in routing.py, and where is its result used?",
+      "type": "cross-file",
+      "strategy": "top-k",
+      "contextTokens": 2573,
+      "promptTokens": 3367,
+      "outputTokens": 158,
+      "costUsd": 0.00107875,
+      "latencyMs": 4810,
+      "answer": "The `request_response` function in `fastapi/routing.py` is a utility that converts a function or coroutine (which takes a `Request` and returns a `Response` or `Awaitable[Response]`) into an ASGI application. It handles the execution of the function, manages `AsyncExitStack` contexts for dependencies with `yield`, and ensures the response is properly awaited.\n\nThe resulting ASGI application is wrapped with `wrap_app_handling_exceptions` to manage exception handling during the request-response cycle. While the provided context defines `request_response`, it does not explicitly list every location where its result is used; however, it serves as a fundamental bridge for turning endpoint logic into an executable ASGI interface.\n\nFILES: fastapi/routing.py",
+      "citedFiles": [
+        "fastapi/routing.py"
+      ],
+      "expectedFiles": [
+        "fastapi/routing.py"
+      ],
+      "citationPrecision": 1,
+      "citationRecall": 1,
+      "qualityScore": 2,
+      "judgeRationale": "Correctly describes request_response's purpose but fails to mention its specific use in APIRoute, omitting the key detail from the reference.",
+      "filesInWindow": [
+        "fastapi/routing.py"
+      ]
+    },
+    {
+      "questionId": "x2",
+      "question": "What is the request_response function in routing.py, and where is its result used?",
+      "type": "cross-file",
+      "strategy": "rerank",
+      "contextTokens": 2560,
+      "promptTokens": 3431,
+      "outputTokens": 154,
+      "costUsd": 0.00108875,
+      "latencyMs": 15744,
+      "answer": "The `request_response` function in `fastapi/routing.py` is a utility that converts a function or coroutine (with the signature `func(request) -> response`) into an ASGI application. It handles the execution of the function, ensuring it runs in a thread pool if it is not an async callable, and manages the lifecycle of dependencies using `AsyncExitStack` for both the request and the function. It also includes error handling to ensure the response is properly awaited.\n\nThe result of `request_response` is an ASGI application (`app`) that wraps the provided function. This application is then passed to `wrap_app_handling_exceptions` to handle exceptions during the request-response cycle.\n\nFILES: fastapi/routing.py",
+      "citedFiles": [
+        "fastapi/routing.py"
+      ],
+      "expectedFiles": [
+        "fastapi/routing.py"
+      ],
+      "citationPrecision": 1,
+      "citationRecall": 1,
+      "qualityScore": 2,
+      "judgeRationale": "Mentions general purpose of request_response but omits its endpoint‑context modification and specific use in APIRoute’s self.app assignment.",
+      "filesInWindow": [
+        "fastapi/routing.py"
+      ]
+    },
+    {
+      "questionId": "x2",
+      "question": "What is the request_response function in routing.py, and where is its result used?",
+      "type": "cross-file",
+      "strategy": "skeleton",
+      "contextTokens": 19112,
+      "promptTokens": 22602,
+      "outputTokens": 150,
+      "costUsd": 0.0058755000000000005,
+      "latencyMs": 5892,
+      "answer": "The `request_response` function in `fastapi/routing.py` is a utility that takes a function or coroutine (`func(request) -> response`) and returns an ASGI application. It ensures the provided function is wrapped to handle both synchronous and asynchronous callables (using `run_in_threadpool` for the former) and manages the request lifecycle using `AsyncExitStack` to handle dependencies and response execution.\n\nThe result of `request_response` is used to create an ASGI application that handles the request-response cycle, including exception handling via `wrap_app_handling_exceptions`. It is designed to be used as the underlying handler for routes that process standard HTTP requests.\n\nFILES: fastapi/routing.py",
+      "citedFiles": [
+        "fastapi/routing.py"
+      ],
+      "expectedFiles": [
+        "fastapi/routing.py"
+      ],
+      "citationPrecision": 1,
+      "citationRecall": 1,
+      "qualityScore": 2,
+      "judgeRationale": "Mentions general wrapping but omits the Starlette origin, endpoint context, and specific APIRoute usage described in the reference.",
+      "filesInWindow": [
+        "fastapi/routing.py"
+      ]
+    },
+    {
+      "questionId": "x3",
+      "question": "How does a value returned by an endpoint get turned into the response body?",
+      "type": "cross-file",
+      "strategy": "full-stuff",
+      "contextTokens": 125917,
+      "promptTokens": 126052,
+      "outputTokens": 272,
+      "costUsd": 0.031921,
+      "latencyMs": 15438,
+      "answer": "The process of turning a value returned by an endpoint into a response body is handled by the `get_request_handler` function in `fastapi/routing.py`.\n\n1.  **Execution**: The endpoint function is executed via `run_endpoint_function`.\n2.  **Response Handling**: If the returned value is already a `Response` object, it is used directly.\n3.  **Serialization**: If it is not a `Response`, the value is passed to `serialize_response`.\n    *   If a `response_field` (with a `TypeAdapter`) is present and no custom response class is used, `serialize_response` uses the `dump_json` method of the `ModelField` to serialize the data directly to JSON bytes via Pydantic's Rust core.\n    *   Otherwise, it uses `field.serialize` (for Python objects) or `jsonable_encoder` to convert the object into a JSON-compatible format, which is then passed to the `actual_response_class` (defaulting to `JSONResponse`) to be rendered into bytes.\n4.  **Finalization**: The resulting response is returned, with headers and background tasks merged from the dependency resolution process.\n\nFILES: fastapi/routing.py, fastapi/encoders.py",
+      "citedFiles": [
+        "fastapi/routing.py",
+        "fastapi/encoders.py"
+      ],
+      "expectedFiles": [
+        "fastapi/routing.py",
+        "fastapi/encoders.py"
+      ],
+      "citationPrecision": 1,
+      "citationRecall": 1,
+      "qualityScore": 3,
+      "judgeRationale": "Mentions the main steps (run_endpoint_function and serialize_response) but adds inaccurate details not in the reference.",
+      "filesInWindow": [
+        "fastapi/__init__.py",
+        "fastapi/__main__.py",
+        "fastapi/_compat/__init__.py",
+        "fastapi/_compat/shared.py",
+        "fastapi/_compat/v2.py",
+        "fastapi/applications.py",
+        "fastapi/background.py",
+        "fastapi/cli.py",
+        "fastapi/concurrency.py",
+        "fastapi/datastructures.py",
+        "fastapi/dependencies/models.py",
+        "fastapi/dependencies/utils.py",
+        "fastapi/encoders.py",
+        "fastapi/exception_handlers.py",
+        "fastapi/exceptions.py",
+        "fastapi/logger.py",
+        "fastapi/middleware/__init__.py",
+        "fastapi/middleware/asyncexitstack.py",
+        "fastapi/middleware/cors.py",
+        "fastapi/middleware/gzip.py",
+        "fastapi/middleware/httpsredirect.py",
+        "fastapi/middleware/trustedhost.py",
+        "fastapi/middleware/wsgi.py",
+        "fastapi/openapi/constants.py",
+        "fastapi/openapi/docs.py",
+        "fastapi/openapi/models.py",
+        "fastapi/openapi/utils.py",
+        "fastapi/param_functions.py",
+        "fastapi/params.py",
+        "fastapi/requests.py",
+        "fastapi/responses.py",
+        "fastapi/routing.py"
+      ]
+    },
+    {
+      "questionId": "x3",
+      "question": "How does a value returned by an endpoint get turned into the response body?",
+      "type": "cross-file",
+      "strategy": "top-k",
+      "contextTokens": 2532,
+      "promptTokens": 3440,
+      "outputTokens": 263,
+      "costUsd": 0.0012545,
+      "latencyMs": 5196,
+      "answer": "The process of turning an endpoint's return value into a response body depends on the type of endpoint:\n\n1.  **Standard Endpoints:** The `serialize_response` function is called. It validates the `response_content` against a `ModelField` (if provided) and serializes it using either `field.serialize_json` (if `dump_json` is enabled) or `field.serialize`. If no field is provided, it uses `jsonable_encoder`. The resulting content is then wrapped in a `Response` object (or a custom response class).\n2.  **Streaming Endpoints (JSONL/SSE):** The `_serialize_data` function (or `_serialize_sse_item` for `ServerSentEvent` objects) is used. For JSONL, items are validated via `stream_item_field` and serialized to JSON bytes. For SSE, the system checks for `raw_data` or uses `model_dump_json` / `json.dumps` before formatting the event.\n3.  **Raw Responses:** If the endpoint returns a `Response` object directly, it is used as-is, with background tasks and headers merged from `solved_result`.\n\nFILES: fastapi/routing.py",
+      "citedFiles": [
+        "fastapi/routing.py"
+      ],
+      "expectedFiles": [
+        "fastapi/routing.py",
+        "fastapi/encoders.py"
+      ],
+      "citationPrecision": 1,
+      "citationRecall": 0.5,
+      "qualityScore": 2,
+      "judgeRationale": "Mentions serialize_response and jsonable_encoder but adds inaccurate extra details and deviates from the reference description.",
+      "filesInWindow": [
+        "fastapi/exception_handlers.py",
+        "fastapi/routing.py"
+      ]
+    },
+    {
+      "questionId": "x3",
+      "question": "How does a value returned by an endpoint get turned into the response body?",
+      "type": "cross-file",
+      "strategy": "rerank",
+      "contextTokens": 2357,
+      "promptTokens": 3155,
+      "outputTokens": 221,
+      "costUsd": 0.00112025,
+      "latencyMs": 4196,
+      "answer": "The value returned by an endpoint is processed by the `serialize_response` function within `get_request_handler`. \n\nIf a `response_field` (a `ModelField`) is defined, `serialize_response` validates the returned content. If validation succeeds, it uses the field's `serialize` or `serialize_json` method to convert the value into the final response body, applying parameters such as `include`, `exclude`, and `by_alias`. If no `response_field` is provided, the value is processed by `jsonable_encoder`.\n\nIn `get_request_handler`, the resulting content is then used to instantiate the `actual_response_class` (e.g., `JSONResponse`). If `dump_json` is enabled, the content is passed directly to a `Response` object. Finally, the response is returned to the client, with body content cleared if the status code does not allow a body (checked via `is_body_allowed_for_status_code`).\n\nFILES: fastapi/routing.py",
+      "citedFiles": [
+        "fastapi/routing.py"
+      ],
+      "expectedFiles": [
+        "fastapi/routing.py",
+        "fastapi/encoders.py"
+      ],
+      "citationPrecision": 1,
+      "citationRecall": 0.5,
+      "qualityScore": 3,
+      "judgeRationale": "Mentions serialize_response and wrapping in response class but incorrectly describes its internals and adds inaccurate details.",
+      "filesInWindow": [
+        "fastapi/routing.py"
+      ]
+    },
+    {
+      "questionId": "x3",
+      "question": "How does a value returned by an endpoint get turned into the response body?",
+      "type": "cross-file",
+      "strategy": "skeleton",
+      "contextTokens": 19071,
+      "promptTokens": 22675,
+      "outputTokens": 293,
+      "costUsd": 0.00610825,
+      "latencyMs": 5445,
+      "answer": "The process of turning an endpoint's return value into a response body is handled within the `app` function returned by `get_request_handler` in `fastapi/routing.py`.\n\n1. **Execution**: The endpoint function is executed via `run_endpoint_function` (if it is a standard function) or by calling the generator/coroutine.\n2. **Response Object Check**: If the endpoint returns a `Response` object directly, it is used as the response.\n3. **Serialization**: If the return value is not a `Response` object, `serialize_response` is called. This function:\n   - Validates the content against the `ModelField` (if provided) using `field.validate`.\n   - Serializes the validated data using `field.serialize` or `field.serialize_json` (if `dump_json` is enabled).\n   - If no `ModelField` is provided, it uses `jsonable_encoder` to convert the object into a JSON-compatible format.\n4. **Response Creation**: The serialized content is passed to the `actual_response_class` (or a default `Response` if `dump_json` is used) along with status codes and headers.\n5. **Streaming**: For generators, items are serialized individually using `_serialize_data` before being streamed.\n\nFILES: fastapi/routing.py",
+      "citedFiles": [
+        "fastapi/routing.py"
+      ],
+      "expectedFiles": [
+        "fastapi/routing.py",
+        "fastapi/encoders.py"
+      ],
+      "citationPrecision": 1,
+      "citationRecall": 0.5,
+      "qualityScore": 5,
+      "judgeRationale": "Accurately describes the run_endpoint_function → serialize_response flow, validation, jsonable_encoder usage, and final response class wrapping.",
+      "filesInWindow": [
+        "fastapi/exception_handlers.py",
+        "fastapi/routing.py"
+      ]
+    },
+    {
+      "questionId": "x4",
+      "question": "What does include_router do when mounting one router onto another, and where is it defined?",
+      "type": "cross-file",
+      "strategy": "full-stuff",
+      "contextTokens": 125917,
+      "promptTokens": 126056,
+      "outputTokens": 154,
+      "costUsd": 0.031745,
+      "latencyMs": 13000,
+      "answer": "The `include_router` method is used to include an `APIRouter` within a `FastAPI` application or another `APIRouter`. It allows for modularizing applications by grouping related path operations, dependencies, and configurations (such as prefixes, tags, and response classes) and applying them to all routes within the included router.\n\nWhen `include_router` is called, it registers the provided `APIRouter` and its routes, combining the parent router's configuration with the child router's settings. This ensures that path prefixes, tags, and dependencies are correctly propagated to the included routes.\n\nThis method is defined in the `FastAPI` class within `fastapi/applications.py`.\n\nFILES: fastapi/applications.py",
+      "citedFiles": [
+        "fastapi/applications.py"
+      ],
+      "expectedFiles": [
+        "fastapi/routing.py",
+        "fastapi/applications.py"
+      ],
+      "citationPrecision": 1,
+      "citationRecall": 0.5,
+      "qualityScore": 1,
+      "judgeRationale": "Incorrectly locates the definition and omits the detailed behavior of include_router described in the reference.",
+      "filesInWindow": [
+        "fastapi/__init__.py",
+        "fastapi/__main__.py",
+        "fastapi/_compat/__init__.py",
+        "fastapi/_compat/shared.py",
+        "fastapi/_compat/v2.py",
+        "fastapi/applications.py",
+        "fastapi/background.py",
+        "fastapi/cli.py",
+        "fastapi/concurrency.py",
+        "fastapi/datastructures.py",
+        "fastapi/dependencies/models.py",
+        "fastapi/dependencies/utils.py",
+        "fastapi/encoders.py",
+        "fastapi/exception_handlers.py",
+        "fastapi/exceptions.py",
+        "fastapi/logger.py",
+        "fastapi/middleware/__init__.py",
+        "fastapi/middleware/asyncexitstack.py",
+        "fastapi/middleware/cors.py",
+        "fastapi/middleware/gzip.py",
+        "fastapi/middleware/httpsredirect.py",
+        "fastapi/middleware/trustedhost.py",
+        "fastapi/middleware/wsgi.py",
+        "fastapi/openapi/constants.py",
+        "fastapi/openapi/docs.py",
+        "fastapi/openapi/models.py",
+        "fastapi/openapi/utils.py",
+        "fastapi/param_functions.py",
+        "fastapi/params.py",
+        "fastapi/requests.py",
+        "fastapi/responses.py",
+        "fastapi/routing.py"
+      ]
+    },
+    {
+      "questionId": "x4",
+      "question": "What does include_router do when mounting one router onto another, and where is it defined?",
+      "type": "cross-file",
+      "strategy": "top-k",
+      "contextTokens": 2267,
+      "promptTokens": 2973,
+      "outputTokens": 254,
+      "costUsd": 0.00112425,
+      "latencyMs": 5910,
+      "answer": "The `include_router` method is used to group path operations by mounting an `APIRouter` into another `APIRouter` or a `FastAPI` application. This allows for structuring applications across multiple files.\n\nWhen `include_router` is called, it performs the following actions:\n1. Validates the provided `prefix` (it must start with `/` and not end with `/`).\n2. Creates an `_RouterIncludeContext` object using `_RouterIncludeContext.for_include`, which merges configurations such as prefixes, tags, dependencies, responses, and callbacks from the parent router with the included router.\n3. Appends an `_IncludedRouter` instance (containing the original router and the new context) to the parent router's `routes` list.\n4. Marks the routes as changed.\n5. Registers the included router's `on_startup` and `on_shutdown` event handlers to the parent router.\n\nThis method is defined in `fastapi/routing.py` for the `APIRouter` class and in `fastapi/applications.py` for the `FastAPI` class.\n\nFILES: fastapi/routing.py, fastapi/applications.py",
+      "citedFiles": [
+        "fastapi/routing.py",
+        "fastapi/applications.py"
+      ],
+      "expectedFiles": [
+        "fastapi/routing.py",
+        "fastapi/applications.py"
+      ],
+      "citationPrecision": 1,
+      "citationRecall": 1,
+      "qualityScore": 4,
+      "judgeRationale": "Correctly identifies definition locations and main merging behavior, but omits the detail of iterating and re-registering each route.",
+      "filesInWindow": [
+        "fastapi/applications.py",
+        "fastapi/routing.py"
+      ]
+    },
+    {
+      "questionId": "x4",
+      "question": "What does include_router do when mounting one router onto another, and where is it defined?",
+      "type": "cross-file",
+      "strategy": "rerank",
+      "contextTokens": 2635,
+      "promptTokens": 3340,
+      "outputTokens": 231,
+      "costUsd": 0.0011815,
+      "latencyMs": 8094,
+      "answer": "The `include_router` method is used to mount an `APIRouter` onto another `APIRouter` or a `FastAPI` application. It registers the routes from the included router into the parent, applying specified configurations such as a path `prefix`, `tags`, `dependencies`, `responses`, `deprecated` status, `include_in_schema` settings, and a `generate_unique_id_function`.\n\nWhen called, it creates an `_RouterIncludeContext` via the `_RouterIncludeContext.for_include` class method, which merges the parent router's settings with the new configurations. The included router is then stored as an `_IncludedRouter` object in the parent's `routes` list. Additionally, it registers the included router's startup and shutdown event handlers with the parent.\n\nThis method is defined in:\n- `fastapi/routing.py` (within the `APIRouter` class)\n- `fastapi/applications.py` (within the `FastAPI` class)\n\nFILES: fastapi/routing.py, fastapi/applications.py",
+      "citedFiles": [
+        "fastapi/routing.py",
+        "fastapi/applications.py"
+      ],
+      "expectedFiles": [
+        "fastapi/routing.py",
+        "fastapi/applications.py"
+      ],
+      "citationPrecision": 1,
+      "citationRecall": 1,
+      "qualityScore": 4,
+      "judgeRationale": "Correctly identifies definition location and main merging behavior, but omits details about callbacks and lifespan combination.",
+      "filesInWindow": [
+        "fastapi/applications.py",
+        "fastapi/routing.py"
+      ]
+    },
+    {
+      "questionId": "x4",
+      "question": "What does include_router do when mounting one router onto another, and where is it defined?",
+      "type": "cross-file",
+      "strategy": "skeleton",
+      "contextTokens": 18806,
+      "promptTokens": 22208,
+      "outputTokens": 265,
+      "costUsd": 0.0059495,
+      "latencyMs": 5150,
+      "answer": "The `include_router` method is used to mount an `APIRouter` into another `APIRouter` or a `FastAPI` application. It allows for grouping path operations, applying shared prefixes, tags, dependencies, and other configurations to all routes within the included router.\n\nWhen called, it performs the following:\n1. It creates a `_RouterIncludeContext` using `_RouterIncludeContext.for_include`, which merges the parent router's configuration (prefix, tags, dependencies, etc.) with the provided arguments.\n2. It wraps the included router in an `_IncludedRouter` instance, which stores the original router and the combined `include_context`.\n3. It appends this `_IncludedRouter` to the parent's `routes` list.\n4. It registers the included router's `on_startup` and `on_shutdown` event handlers with the parent.\n5. It calls `_mark_routes_changed()` to update the router's state.\n\nIt is defined in `fastapi/routing.py` for the `APIRouter` class and in `fastapi/applications.py` for the `FastAPI` class.\n\nFILES: fastapi/routing.py, fastapi/applications.py",
+      "citedFiles": [
+        "fastapi/routing.py",
+        "fastapi/applications.py"
+      ],
+      "expectedFiles": [
+        "fastapi/routing.py",
+        "fastapi/applications.py"
+      ],
+      "citationPrecision": 1,
+      "citationRecall": 1,
+      "qualityScore": 3,
+      "judgeRationale": "Mentions the method location and merging context but omits the key detail of iterating and re-registering each route with combined prefixes and other attributes.",
+      "filesInWindow": [
+        "fastapi/applications.py",
+        "fastapi/routing.py"
+      ]
+    },
+    {
+      "questionId": "x5",
+      "question": "How does a SecurityScopes parameter in a dependency actually get populated at request time?",
+      "type": "cross-file",
+      "strategy": "full-stuff",
+      "contextTokens": 125917,
+      "promptTokens": 126053,
+      "outputTokens": 292,
+      "costUsd": 0.03195125,
+      "latencyMs": 14129,
+      "answer": "At request time, the `SecurityScopes` parameter in a dependency is populated by the `solve_dependencies` function in `fastapi/dependencies/utils.py`.\n\nWhen `solve_dependencies` processes a `Dependant` object, it checks if the `dependant.security_scopes_param_name` attribute is set. If it is, it instantiates a `SecurityScopes` object using the scopes collected for that dependency:\n\n```python\nif dependant.security_scopes_param_name:\n    values[dependant.security_scopes_param_name] = SecurityScopes(\n        scopes=_get_oauth_scopes(dependant=dependant)\n    )\n```\n\nThe scopes are determined by `_get_oauth_scopes` (defined in `fastapi/dependencies/models.py`), which aggregates the `own_oauth_scopes` defined on the current dependency and any `parent_oauth_scopes` inherited from the dependency tree. The `security_scopes_param_name` is identified during the initial dependency analysis in `get_dependant` (also in `fastapi/dependencies/utils.py`), where `add_non_field_param_to_dependency` detects the `SecurityScopes` type annotation and assigns the parameter name to the `Dependant` model.\n\nFILES: fastapi/dependencies/models.py, fastapi/dependencies/utils.py",
+      "citedFiles": [
+        "fastapi/dependencies/models.py",
+        "fastapi/dependencies/utils.py"
+      ],
+      "expectedFiles": [
+        "fastapi/dependencies/utils.py",
+        "fastapi/security/oauth2.py"
+      ],
+      "citationPrecision": 0.5,
+      "citationRecall": 0.5,
+      "qualityScore": 3,
+      "judgeRationale": "Correctly describes that get_dependant records the name and solve_dependencies injects a SecurityScopes instance, but misstates where the scope‑gathering function lives.",
+      "filesInWindow": [
+        "fastapi/__init__.py",
+        "fastapi/__main__.py",
+        "fastapi/_compat/__init__.py",
+        "fastapi/_compat/shared.py",
+        "fastapi/_compat/v2.py",
+        "fastapi/applications.py",
+        "fastapi/background.py",
+        "fastapi/cli.py",
+        "fastapi/concurrency.py",
+        "fastapi/datastructures.py",
+        "fastapi/dependencies/models.py",
+        "fastapi/dependencies/utils.py",
+        "fastapi/encoders.py",
+        "fastapi/exception_handlers.py",
+        "fastapi/exceptions.py",
+        "fastapi/logger.py",
+        "fastapi/middleware/__init__.py",
+        "fastapi/middleware/asyncexitstack.py",
+        "fastapi/middleware/cors.py",
+        "fastapi/middleware/gzip.py",
+        "fastapi/middleware/httpsredirect.py",
+        "fastapi/middleware/trustedhost.py",
+        "fastapi/middleware/wsgi.py",
+        "fastapi/openapi/constants.py",
+        "fastapi/openapi/docs.py",
+        "fastapi/openapi/models.py",
+        "fastapi/openapi/utils.py",
+        "fastapi/param_functions.py",
+        "fastapi/params.py",
+        "fastapi/requests.py",
+        "fastapi/responses.py",
+        "fastapi/routing.py"
+      ]
+    },
+    {
+      "questionId": "x5",
+      "question": "How does a SecurityScopes parameter in a dependency actually get populated at request time?",
+      "type": "cross-file",
+      "strategy": "top-k",
+      "contextTokens": 1740,
+      "promptTokens": 2192,
+      "outputTokens": 173,
+      "costUsd": 0.0008075000000000001,
+      "latencyMs": 9836,
+      "answer": "At request time, the `SecurityScopes` parameter is populated within the `solve_dependencies` function in `fastapi/dependencies/utils.py`. \n\nWhen `solve_dependencies` processes a `Dependant` object, it checks if `dependant.security_scopes_param_name` is set. If it is, FastAPI instantiates the `SecurityScopes` class, passing the required OAuth2 scopes into the `scopes` argument. These scopes are retrieved by calling the internal helper function `_get_oauth_scopes(dependant=dependant)`. The resulting `SecurityScopes` instance is then assigned to the corresponding parameter in the `values` dictionary, which is used to execute the dependency.\n\nFILES: fastapi/dependencies/utils.py, fastapi/security/oauth2.py, fastapi/dependencies/models.py",
+      "citedFiles": [
+        "fastapi/dependencies/utils.py",
+        "fastapi/security/oauth2.py",
+        "fastapi/dependencies/models.py"
+      ],
+      "expectedFiles": [
+        "fastapi/dependencies/utils.py",
+        "fastapi/security/oauth2.py"
+      ],
+      "citationPrecision": 0.6666666666666666,
+      "citationRecall": 1,
+      "qualityScore": 4,
+      "judgeRationale": "Correctly identifies solve_dependencies and security_scopes_param_name, but adds an inaccurate helper function detail.",
+      "filesInWindow": [
+        "fastapi/dependencies/models.py",
+        "fastapi/dependencies/utils.py",
+        "fastapi/param_functions.py",
+        "fastapi/params.py",
+        "fastapi/security/oauth2.py"
+      ]
+    },
+    {
+      "questionId": "x5",
+      "question": "How does a SecurityScopes parameter in a dependency actually get populated at request time?",
+      "type": "cross-file",
+      "strategy": "rerank",
+      "contextTokens": 1910,
+      "promptTokens": 2487,
+      "outputTokens": 235,
+      "costUsd": 0.0009742500000000001,
+      "latencyMs": 5323,
+      "answer": "At request time, the `SecurityScopes` parameter is populated within the `solve_dependencies` function in `fastapi/dependencies/utils.py`. \n\nWhen `solve_dependencies` processes a `dependant` object, it checks if `dependant.security_scopes_param_name` is set. If it is, the function instantiates the `SecurityScopes` class. The scopes passed to the constructor are retrieved by calling the helper function `_get_oauth_scopes(dependant=dependant)`. \n\nThe `_get_oauth_scopes` function, located in `fastapi/dependencies/models.py`, aggregates the `parent_oauth_scopes` and `own_oauth_scopes` defined within the `Dependant` object to determine the full list of required scopes. Once instantiated, the `SecurityScopes` object is stored in the `values` dictionary, which is then returned as part of the `SolvedDependency` result to be injected into the dependency or path operation.\n\nFILES: fastapi/dependencies/utils.py, fastapi/dependencies/models.py, fastapi/security/oauth2.py",
+      "citedFiles": [
+        "fastapi/dependencies/utils.py",
+        "fastapi/dependencies/models.py",
+        "fastapi/security/oauth2.py"
+      ],
+      "expectedFiles": [
+        "fastapi/dependencies/utils.py",
+        "fastapi/security/oauth2.py"
+      ],
+      "citationPrecision": 0.6666666666666666,
+      "citationRecall": 1,
+      "qualityScore": 2,
+      "judgeRationale": "Mentions solve_dependencies and security_scopes_param_name correctly but adds inaccurate details about _get_oauth_scopes and file locations not in the reference.",
+      "filesInWindow": [
+        "fastapi/dependencies/models.py",
+        "fastapi/dependencies/utils.py",
+        "fastapi/security/oauth2.py"
+      ]
+    },
+    {
+      "questionId": "x5",
+      "question": "How does a SecurityScopes parameter in a dependency actually get populated at request time?",
+      "type": "cross-file",
+      "strategy": "skeleton",
+      "contextTokens": 18279,
+      "promptTokens": 21427,
+      "outputTokens": 203,
+      "costUsd": 0.0056612500000000005,
+      "latencyMs": 4721,
+      "answer": "At request time, the `SecurityScopes` parameter is populated within the `solve_dependencies` function in `fastapi/dependencies/utils.py`.\n\nWhen `solve_dependencies` processes a `Dependant` object, it checks if the `dependant.security_scopes_param_name` attribute is set. If it is, FastAPI instantiates `SecurityScopes` by calling `_get_oauth_scopes(dependant=dependant)` to retrieve the required OAuth2 scopes. This instance is then assigned to the corresponding parameter in the `values` dictionary, which is used to execute the endpoint or dependency.\n\nThe `SecurityScopes` class itself, defined in `fastapi/security/oauth2.py`, stores these scopes in its `self.scopes` attribute and provides a space-separated string representation in `self.scope_str`.\n\nFILES: fastapi/dependencies/utils.py, fastapi/security/oauth2.py, fastapi/dependencies/models.py",
+      "citedFiles": [
+        "fastapi/dependencies/utils.py",
+        "fastapi/security/oauth2.py",
+        "fastapi/dependencies/models.py"
+      ],
+      "expectedFiles": [
+        "fastapi/dependencies/utils.py",
+        "fastapi/security/oauth2.py"
+      ],
+      "citationPrecision": 0.6666666666666666,
+      "citationRecall": 1,
+      "qualityScore": 2,
+      "judgeRationale": "Correctly mentions solve_dependencies and security_scopes_param_name but incorrectly describes how the scopes are obtained.",
+      "filesInWindow": [
+        "fastapi/dependencies/models.py",
+        "fastapi/dependencies/utils.py",
+        "fastapi/param_functions.py",
+        "fastapi/params.py",
+        "fastapi/security/oauth2.py"
+      ]
+    },
+    {
+      "questionId": "a1",
+      "question": "How do fastapi/routing.py and fastapi/dependencies/utils.py communicate with each other?",
       "type": "architectural",
       "strategy": "full-stuff",
       "contextTokens": 125917,
-      "promptTokens": 126047,
-      "outputTokens": 248,
-      "costUsd": 0.031883749999999995,
-      "latencyMs": 7610,
-      "answer": "The OpenAPI schema is generated by the `FastAPI.openapi()` method, which calls `get_openapi` from `fastapi.openapi.utils`. This function aggregates metadata, routes, and webhooks, then uses `get_definitions` to generate JSON schemas for all models involved in the application's routes.\n\nThe schema is served via a route added in the `FastAPI.setup()` method. When `openapi_url` is set (defaulting to `/openapi.json`), `FastAPI` adds a route that returns a `JSONResponse` containing the generated schema. If `docs_url` or `redoc_url` are also set, `FastAPI` adds routes that return `HTMLResponse` (using `get_swagger_ui_html` or `get_redoc_html`) to serve the interactive documentation, which consumes the OpenAPI schema from the `openapi_url`.\n\nThe `FastAPI.openapi()` method caches the generated schema in `app.openapi_schema` and only regenerates it if the router's route version changes, optimizing performance.\n\nFILES: fastapi/applications.py, fastapi/openapi/utils.py, fastapi/openapi/docs.py",
+      "promptTokens": 126057,
+      "outputTokens": 314,
+      "costUsd": 0.03198525,
+      "latencyMs": 14181,
+      "answer": "`fastapi/routing.py` and `fastapi/dependencies/utils.py` communicate primarily through the exchange of dependency models and the execution of dependency resolution logic.\n\n1.  **Dependency Modeling**: `fastapi/routing.py` calls `get_dependant` from `fastapi/dependencies/utils.py` to analyze endpoint signatures and build a `Dependant` object. This object stores information about path, query, header, cookie, and body parameters, as well as sub-dependencies.\n2.  **Dependency Resolution**: During request handling, `fastapi/routing.py` invokes `solve_dependencies` from `fastapi/dependencies/utils.py`. This function processes the `Dependant` tree, resolves sub-dependencies (including those with `yield`), and returns a `SolvedDependency` object containing the resolved values, errors, and background tasks.\n3.  **Body Field Management**: `fastapi/routing.py` uses `_get_body_field` from `fastapi/dependencies/utils.py` to aggregate body parameters into a single `ModelField` for OpenAPI schema generation and request parsing.\n4.  **Utility Sharing**: `fastapi/routing.py` utilizes `get_typed_return_annotation` and `get_stream_item_type` from `fastapi/dependencies/utils.py` to inspect endpoint return types for response model and streaming configuration.\n\nFILES: fastapi/routing.py, fastapi/dependencies/utils.py",
       "citedFiles": [
-        "fastapi/applications.py",
-        "fastapi/openapi/utils.py",
-        "fastapi/openapi/docs.py"
+        "fastapi/routing.py",
+        "fastapi/dependencies/utils.py"
       ],
       "expectedFiles": [
-        "fastapi/openapi/utils.py",
-        "fastapi/applications.py"
+        "fastapi/routing.py",
+        "fastapi/dependencies/utils.py",
+        "fastapi/dependencies/models.py"
       ],
-      "citationPrecision": 0.6666666666666666,
-      "citationRecall": 1,
-      "qualityScore": null,
-      "judgeRationale": null,
+      "citationPrecision": 1,
+      "citationRecall": 0.6666666666666666,
+      "qualityScore": 5,
+      "judgeRationale": "Accurately describes the Dependant model interface and dependency resolution between the modules, matching the reference.",
       "filesInWindow": [
         "fastapi/__init__.py",
         "fastapi/__main__.py",
@@ -347,16 +1475,158 @@
       ]
     },
     {
-      "questionId": "q-seed-3",
-      "question": "How does the OpenAPI schema get generated and served?",
+      "questionId": "a1",
+      "question": "How do fastapi/routing.py and fastapi/dependencies/utils.py communicate with each other?",
+      "type": "architectural",
+      "strategy": "top-k",
+      "contextTokens": 1809,
+      "promptTokens": 2373,
+      "outputTokens": 248,
+      "costUsd": 0.0009652500000000001,
+      "latencyMs": 5985,
+      "answer": "`fastapi/routing.py` communicates with `fastapi/dependencies/utils.py` by importing and utilizing several utility functions and classes to handle dependency injection and request processing.\n\nSpecifically, `fastapi/routing.py` imports the following from `fastapi/dependencies/utils.py`:\n- `SolvedDependency`, `get_dependant`, `get_parameterless_sub_dependant`, `solve_dependencies`, `get_stream_item_type`, `get_typed_return_annotation`, `_get_body_field`, `_get_flat_body_params`, and `_should_embed_body_fields`.\n\nThese are used to manage route dependencies. For example, the function `_build_dependant_with_parameterless_dependencies` in `fastapi/routing.py` calls `get_dependant` to create a `Dependant` object and `get_parameterless_sub_dependant` to process dependencies. It also uses `_get_flat_body_params` and `_should_embed_body_fields` to determine how to handle body parameters for a route.\n\nFILES: fastapi/routing.py",
+      "citedFiles": [
+        "fastapi/routing.py"
+      ],
+      "expectedFiles": [
+        "fastapi/routing.py",
+        "fastapi/dependencies/utils.py",
+        "fastapi/dependencies/models.py"
+      ],
+      "citationPrecision": 1,
+      "citationRecall": 0.3333333333333333,
+      "qualityScore": 2,
+      "judgeRationale": "Mentions some imported utils but omits the core Dependant/SolvedDependency interface and request‑time solve_dependencies mechanism.",
+      "filesInWindow": [
+        "fastapi/routing.py"
+      ]
+    },
+    {
+      "questionId": "a1",
+      "question": "How do fastapi/routing.py and fastapi/dependencies/utils.py communicate with each other?",
+      "type": "architectural",
+      "strategy": "rerank",
+      "contextTokens": 2130,
+      "promptTokens": 2922,
+      "outputTokens": 292,
+      "costUsd": 0.0011685,
+      "latencyMs": 25704,
+      "answer": "`fastapi/routing.py` and `fastapi/dependencies/utils.py` communicate primarily through the creation and resolution of `Dependant` objects.\n\n1.  **Dependency Building**: `fastapi/routing.py` calls `get_dependant` (from `fastapi/dependencies/utils.py`) to analyze endpoints and create a `Dependant` object. This is often wrapped in `_build_dependant_with_parameterless_dependencies`, which processes dependencies and body parameters.\n2.  **Dependency Resolution**: During request handling, `fastapi/routing.py` (specifically `_FrontendRouteGroup._solve_dependencies`) invokes `solve_dependencies` from `fastapi/dependencies/utils.py`. \n3.  **Data Exchange**: `solve_dependencies` takes the `Dependant` object, request data, and exit stacks as input. It returns a `SolvedDependency` object containing the resolved values, errors, background tasks, and dependency cache.\n4.  **Parameter Mapping**: `fastapi/dependencies/utils.py` uses the metadata within the `Dependant` object (such as `path_params`, `query_params`, and `body_params`) to extract and validate values from the request, which are then returned to the routing layer for endpoint execution.\n\nFILES: fastapi/dependencies/utils.py, fastapi/routing.py",
+      "citedFiles": [
+        "fastapi/dependencies/utils.py",
+        "fastapi/routing.py"
+      ],
+      "expectedFiles": [
+        "fastapi/routing.py",
+        "fastapi/dependencies/utils.py",
+        "fastapi/dependencies/models.py"
+      ],
+      "citationPrecision": 1,
+      "citationRecall": 0.6666666666666666,
+      "qualityScore": 5,
+      "judgeRationale": "Accurately describes the Dependant model as the interface, naming get_dependant, solve_dependencies and SolvedDependency correctly.",
+      "filesInWindow": [
+        "fastapi/dependencies/utils.py",
+        "fastapi/routing.py"
+      ]
+    },
+    {
+      "questionId": "a1",
+      "question": "How do fastapi/routing.py and fastapi/dependencies/utils.py communicate with each other?",
+      "type": "architectural",
+      "strategy": "skeleton",
+      "contextTokens": 18348,
+      "promptTokens": 21608,
+      "outputTokens": 255,
+      "costUsd": 0.0057845,
+      "latencyMs": 4172,
+      "answer": "`fastapi/routing.py` and `fastapi/dependencies/utils.py` communicate primarily through the exchange of dependency-related models and utility functions.\n\n`fastapi/routing.py` imports and utilizes several functions from `fastapi/dependencies/utils.py` to manage dependency resolution and signature analysis:\n*   **Dependency Resolution:** `get_dependant` is used to create a `Dependant` object for a given path and endpoint. `solve_dependencies` is called to resolve dependencies during request handling.\n*   **Parameter Management:** `get_parameterless_sub_dependant` is used to handle dependencies without parameters. `_get_flat_body_params` and `_should_embed_body_fields` are used to analyze body parameters.\n*   **Signature/Type Analysis:** `get_stream_item_type` and `get_typed_return_annotation` are used to inspect endpoint signatures and return types.\n\nAdditionally, `fastapi/routing.py` imports `SolvedDependency` from `fastapi/dependencies/utils.py` to represent the result of the dependency resolution process.\n\nFILES: fastapi/routing.py, fastapi/dependencies/utils.py",
+      "citedFiles": [
+        "fastapi/routing.py",
+        "fastapi/dependencies/utils.py"
+      ],
+      "expectedFiles": [
+        "fastapi/routing.py",
+        "fastapi/dependencies/utils.py",
+        "fastapi/dependencies/models.py"
+      ],
+      "citationPrecision": 1,
+      "citationRecall": 0.6666666666666666,
+      "qualityScore": 2,
+      "judgeRationale": "Mentions get_dependant and solve_dependencies but misstates where SolvedDependency lives and omits the Dependant model as the key interface.",
+      "filesInWindow": [
+        "fastapi/routing.py"
+      ]
+    },
+    {
+      "questionId": "a2",
+      "question": "How is the OpenAPI schema generated and served?",
+      "type": "architectural",
+      "strategy": "full-stuff",
+      "contextTokens": 125917,
+      "promptTokens": 126046,
+      "outputTokens": 208,
+      "costUsd": 0.0318235,
+      "latencyMs": 10116,
+      "answer": "The OpenAPI schema is generated by the `get_openapi` function in `fastapi/openapi/utils.py`. This function aggregates information from all routes, including path operations and webhooks, by extracting fields, models, and dependencies. It uses `get_definitions` to generate JSON schemas for models and `get_openapi_path` to build the path-specific operations, security schemes, and metadata.\n\nThe schema is served by the `FastAPI` application instance. During initialization, `FastAPI.setup()` creates a route at `self.openapi_url` (default `/openapi.json`) that returns the generated schema as a `JSONResponse`. The `FastAPI.openapi()` method handles the generation, caching the result in `app.openapi_schema` to avoid redundant processing. If `openapi_url` is set to `None`, the schema and associated documentation endpoints (`/docs`, `/redoc`) are disabled.\n\nFILES: fastapi/applications.py, fastapi/openapi/utils.py",
+      "citedFiles": [
+        "fastapi/applications.py",
+        "fastapi/openapi/utils.py"
+      ],
+      "expectedFiles": [
+        "fastapi/openapi/utils.py",
+        "fastapi/applications.py"
+      ],
+      "citationPrecision": 1,
+      "citationRecall": 1,
+      "qualityScore": 5,
+      "judgeRationale": "Accurately describes the lazy generation via FastAPI.openapi() calling get_openapi, use of get_openapi_path, caching, and serving through the openapi_url route.",
+      "filesInWindow": [
+        "fastapi/__init__.py",
+        "fastapi/__main__.py",
+        "fastapi/_compat/__init__.py",
+        "fastapi/_compat/shared.py",
+        "fastapi/_compat/v2.py",
+        "fastapi/applications.py",
+        "fastapi/background.py",
+        "fastapi/cli.py",
+        "fastapi/concurrency.py",
+        "fastapi/datastructures.py",
+        "fastapi/dependencies/models.py",
+        "fastapi/dependencies/utils.py",
+        "fastapi/encoders.py",
+        "fastapi/exception_handlers.py",
+        "fastapi/exceptions.py",
+        "fastapi/logger.py",
+        "fastapi/middleware/__init__.py",
+        "fastapi/middleware/asyncexitstack.py",
+        "fastapi/middleware/cors.py",
+        "fastapi/middleware/gzip.py",
+        "fastapi/middleware/httpsredirect.py",
+        "fastapi/middleware/trustedhost.py",
+        "fastapi/middleware/wsgi.py",
+        "fastapi/openapi/constants.py",
+        "fastapi/openapi/docs.py",
+        "fastapi/openapi/models.py",
+        "fastapi/openapi/utils.py",
+        "fastapi/param_functions.py",
+        "fastapi/params.py",
+        "fastapi/requests.py",
+        "fastapi/responses.py",
+        "fastapi/routing.py"
+      ]
+    },
+    {
+      "questionId": "a2",
+      "question": "How is the OpenAPI schema generated and served?",
       "type": "architectural",
       "strategy": "top-k",
       "contextTokens": 2499,
-      "promptTokens": 3351,
-      "outputTokens": 267,
-      "costUsd": 0.00123825,
-      "latencyMs": 7870,
-      "answer": "The OpenAPI schema is generated by the `FastAPI.openapi()` method, which calls the `get_openapi` utility function. This function aggregates metadata, routes, and webhooks to build a dictionary representation of the OpenAPI specification, which is then validated and encoded using the `OpenAPI` Pydantic model.\n\nThe schema generation process involves:\n1.  **Field and Model Extraction**: `get_fields_from_routes` and `get_flat_models_from_fields` identify the data models involved.\n2.  **Path Generation**: `get_openapi_path` iterates through routes and webhooks to generate path-specific operations, security schemes, and definitions.\n3.  **Caching**: `FastAPI.openapi()` stores the result in `app.openapi_schema` to avoid redundant computation.\n\nThe schema is served via the `FastAPI.setup()` method, which registers an asynchronous `openapi` route handler at the path defined by `self.openapi_url`. This handler returns the generated schema as a `JSONResponse`. Additionally, `setup()` configures the Swagger UI by adding a route that returns `get_swagger_ui_html`.\n\nFILES: fastapi/applications.py, fastapi/openapi/utils.py, fastapi/openapi/models.py",
+      "promptTokens": 3350,
+      "outputTokens": 192,
+      "costUsd": 0.0011255,
+      "latencyMs": 4604,
+      "answer": "The OpenAPI schema is generated by the `FastAPI.openapi()` method, which calls `get_openapi()` from `fastapi/openapi/utils.py`. This function aggregates route information, webhooks, and models to build a dictionary representing the OpenAPI specification, which is then validated against the `OpenAPI` Pydantic model. The result is cached in `app.openapi_schema` to avoid redundant generation.\n\nThe schema is served via the `FastAPI.setup()` method. If `openapi_url` is configured, `setup()` registers an asynchronous route at that URL that returns the generated schema as a `JSONResponse`. Additionally, if `docs_url` is set, `setup()` registers a route that returns an HTML response using `get_swagger_ui_html()` to serve the Swagger UI.\n\nFILES: fastapi/applications.py, fastapi/openapi/utils.py, fastapi/openapi/models.py",
       "citedFiles": [
         "fastapi/applications.py",
         "fastapi/openapi/utils.py",
@@ -368,8 +1638,8 @@
       ],
       "citationPrecision": 0.6666666666666666,
       "citationRecall": 1,
-      "qualityScore": null,
-      "judgeRationale": null,
+      "qualityScore": 4,
+      "judgeRationale": "Correctly identifies FastAPI.openapi() and get_openapi usage and route registration, but adds inaccurate details about validation and a non‑existent setup() method.",
       "filesInWindow": [
         "fastapi/applications.py",
         "fastapi/openapi/models.py",
@@ -377,44 +1647,46 @@
       ]
     },
     {
-      "questionId": "q-seed-3",
-      "question": "How does the OpenAPI schema get generated and served?",
+      "questionId": "a2",
+      "question": "How is the OpenAPI schema generated and served?",
       "type": "architectural",
       "strategy": "rerank",
-      "contextTokens": 2855,
-      "promptTokens": 3916,
-      "outputTokens": 217,
-      "costUsd": 0.0013045,
-      "latencyMs": 6072,
-      "answer": "The OpenAPI schema is generated by the `FastAPI.openapi` method, which calls `get_openapi` from `fastapi.openapi.utils`. This function aggregates route information, dependencies, and models to build the schema. It uses `get_fields_from_routes` to collect fields, `get_model_name_map` to map models, and `get_openapi_path` to process individual routes and webhooks into OpenAPI paths. The result is cached in `app.openapi_schema` to avoid redundant generation.\n\nThe schema is served via the `FastAPI.setup` method. If `openapi_url` is configured, `setup` registers an asynchronous route handler that calls `self.openapi()` and returns the schema as a `JSONResponse`. Additionally, if `docs_url` is set, `setup` registers a route handler that returns `get_swagger_ui_html` to serve the Swagger UI, which consumes the generated OpenAPI schema.\n\nFILES: fastapi/applications.py, fastapi/openapi/utils.py",
+      "contextTokens": 2661,
+      "promptTokens": 3653,
+      "outputTokens": 208,
+      "costUsd": 0.00122525,
+      "latencyMs": 6458,
+      "answer": "The OpenAPI schema is generated by the `FastAPI.openapi()` method, which calls the `get_openapi` function from `fastapi.openapi.utils`. This function aggregates route information, including paths, webhooks, and security schemes, and uses `get_fields_from_routes` and `get_definitions` to process Pydantic models into JSON schemas. The result is cached in `app.openapi_schema` to avoid redundant generation.\n\nThe schema is served via the `FastAPI.setup()` method. If `openapi_url` is configured, `setup` registers an asynchronous route at that URL that returns the schema as a `JSONResponse`. Additionally, if `docs_url` is set, `setup` registers a route that returns an `HTMLResponse` generated by `get_swagger_ui_html`, which renders the Swagger UI using the OpenAPI schema URL.\n\nFILES: fastapi/applications.py, fastapi/openapi/utils.py, fastapi/_compat/v2.py",
       "citedFiles": [
         "fastapi/applications.py",
-        "fastapi/openapi/utils.py"
+        "fastapi/openapi/utils.py",
+        "fastapi/_compat/v2.py"
       ],
       "expectedFiles": [
         "fastapi/openapi/utils.py",
         "fastapi/applications.py"
       ],
-      "citationPrecision": 1,
+      "citationPrecision": 0.6666666666666666,
       "citationRecall": 1,
-      "qualityScore": null,
-      "judgeRationale": null,
+      "qualityScore": 3,
+      "judgeRationale": "Correctly identifies FastAPI.openapi() and get_openapi usage and caching, but misstates the registration mechanism and adds inaccurate details.",
       "filesInWindow": [
+        "fastapi/_compat/v2.py",
         "fastapi/applications.py",
         "fastapi/openapi/utils.py"
       ]
     },
     {
-      "questionId": "q-seed-3",
-      "question": "How does the OpenAPI schema get generated and served?",
+      "questionId": "a2",
+      "question": "How is the OpenAPI schema generated and served?",
       "type": "architectural",
       "strategy": "skeleton",
       "contextTokens": 19038,
-      "promptTokens": 22586,
-      "outputTokens": 289,
-      "costUsd": 0.0060799999999999995,
-      "latencyMs": 13866,
-      "answer": "The OpenAPI schema is generated by the `FastAPI.openapi()` method, which calls the `get_openapi` function from `fastapi/openapi/utils.py`. \n\n1.  **Generation**: `get_openapi` iterates over the application's routes and webhooks using `routing.iter_route_contexts`. For each route, it uses `get_openapi_path` to extract metadata, parameters, and request/response bodies. It leverages `get_definitions` to create JSON schemas for models and `jsonable_encoder` to serialize the final `OpenAPI` model into a dictionary.\n2.  **Caching**: The `FastAPI.openapi()` method caches the generated schema in `self.openapi_schema` and only regenerates it if the application's routes have changed (tracked via `self.router._get_routes_version()`).\n3.  **Serving**: The `FastAPI.setup()` method registers a route (defaulting to `/openapi.json`) that serves the schema as a `JSONResponse`. Additionally, `setup()` registers routes for interactive documentation (Swagger UI and ReDoc) that use `get_swagger_ui_html` or `get_redoc_html` to serve HTML pages that consume the OpenAPI schema.\n\nFILES: fastapi/applications.py, fastapi/openapi/utils.py, fastapi/openapi/docs.py",
+      "promptTokens": 22585,
+      "outputTokens": 265,
+      "costUsd": 0.0060437500000000005,
+      "latencyMs": 5236,
+      "answer": "The OpenAPI schema is generated by the `FastAPI.openapi()` method, which calls the `get_openapi` function from `fastapi/openapi/utils.py`. \n\nThe `get_openapi` function aggregates information from the application's routes and webhooks. It performs the following steps:\n1. Collects all fields from routes using `get_fields_from_routes`.\n2. Determines model names and definitions using `get_flat_models_from_fields` and `get_definitions`.\n3. Iterates through route contexts using `routing.iter_route_contexts` and generates path-specific metadata via `get_openapi_path`.\n4. Encodes the final `OpenAPI` model into a dictionary using `jsonable_encoder`.\n\nThe schema is served via the `FastAPI.setup()` method. If `openapi_url` is configured, `setup` registers a route that returns the generated schema as a `JSONResponse`. Additionally, if `docs_url` is set, `setup` registers a route that returns an HTML response generated by `get_swagger_ui_html` to display the Swagger UI.\n\nFILES: fastapi/applications.py, fastapi/openapi/utils.py, fastapi/openapi/docs.py",
       "citedFiles": [
         "fastapi/applications.py",
         "fastapi/openapi/utils.py",
@@ -426,12 +1698,338 @@
       ],
       "citationPrecision": 0.6666666666666666,
       "citationRecall": 1,
-      "qualityScore": null,
-      "judgeRationale": null,
+      "qualityScore": 3,
+      "judgeRationale": "Mentions the core openapi() and get_openapi flow but adds incorrect details about setup and extra functions, missing precise description of route walking.",
       "filesInWindow": [
         "fastapi/applications.py",
         "fastapi/openapi/models.py",
         "fastapi/openapi/utils.py"
+      ]
+    },
+    {
+      "questionId": "a3",
+      "question": "How does FastAPI's security system integrate with its dependency injection system?",
+      "type": "architectural",
+      "strategy": "full-stuff",
+      "contextTokens": 125917,
+      "promptTokens": 126051,
+      "outputTokens": 267,
+      "costUsd": 0.03191325,
+      "latencyMs": 7187,
+      "answer": "FastAPI's security system integrates with the dependency injection system by utilizing the `Security` class, which inherits from `Depends`. \n\nWhen a dependency is declared using `Security`, it allows the developer to specify OAuth2 `scopes`. These scopes are integrated into the dependency injection system and the OpenAPI schema. During dependency resolution, `solve_dependencies` (in `fastapi/dependencies/utils.py`) processes these dependencies. \n\nThe system uses `_get_oauth_scopes` (in `fastapi/dependencies/models.py`) to collect and merge scopes from the dependency and its parents. These scopes are then used to generate the `security` requirements in the OpenAPI operation metadata via `_get_openapi_security_definitions` (in `fastapi/openapi/utils.py`). \n\nAdditionally, if a dependency is a subclass of `SecurityBase`, the system identifies it as a security scheme using `_is_security_scheme`. The `SecurityScopes` object can also be injected into an endpoint by declaring it as a parameter, which the dependency system populates with the scopes defined in the `Security` dependency.\n\nFILES: fastapi/dependencies/models.py, fastapi/dependencies/utils.py, fastapi/openapi/utils.py, fastapi/param_functions.py",
+      "citedFiles": [
+        "fastapi/dependencies/models.py",
+        "fastapi/dependencies/utils.py",
+        "fastapi/openapi/utils.py",
+        "fastapi/param_functions.py"
+      ],
+      "expectedFiles": [
+        "fastapi/security/oauth2.py",
+        "fastapi/dependencies/utils.py",
+        "fastapi/params.py"
+      ],
+      "citationPrecision": 0.25,
+      "citationRecall": 0.3333333333333333,
+      "qualityScore": 4,
+      "judgeRationale": "Correctly describes Security as a Depends subclass, scope handling, and integration with solve_dependencies and OpenAPI, but omits details about get_dependant processing.",
+      "filesInWindow": [
+        "fastapi/__init__.py",
+        "fastapi/__main__.py",
+        "fastapi/_compat/__init__.py",
+        "fastapi/_compat/shared.py",
+        "fastapi/_compat/v2.py",
+        "fastapi/applications.py",
+        "fastapi/background.py",
+        "fastapi/cli.py",
+        "fastapi/concurrency.py",
+        "fastapi/datastructures.py",
+        "fastapi/dependencies/models.py",
+        "fastapi/dependencies/utils.py",
+        "fastapi/encoders.py",
+        "fastapi/exception_handlers.py",
+        "fastapi/exceptions.py",
+        "fastapi/logger.py",
+        "fastapi/middleware/__init__.py",
+        "fastapi/middleware/asyncexitstack.py",
+        "fastapi/middleware/cors.py",
+        "fastapi/middleware/gzip.py",
+        "fastapi/middleware/httpsredirect.py",
+        "fastapi/middleware/trustedhost.py",
+        "fastapi/middleware/wsgi.py",
+        "fastapi/openapi/constants.py",
+        "fastapi/openapi/docs.py",
+        "fastapi/openapi/models.py",
+        "fastapi/openapi/utils.py",
+        "fastapi/param_functions.py",
+        "fastapi/params.py",
+        "fastapi/requests.py",
+        "fastapi/responses.py",
+        "fastapi/routing.py"
+      ]
+    },
+    {
+      "questionId": "a3",
+      "question": "How does FastAPI's security system integrate with its dependency injection system?",
+      "type": "architectural",
+      "strategy": "top-k",
+      "contextTokens": 1367,
+      "promptTokens": 1691,
+      "outputTokens": 276,
+      "costUsd": 0.00083675,
+      "latencyMs": 5185,
+      "answer": "FastAPI integrates security with its dependency injection system primarily through the `Security` class and the `SecurityBase` base class. \n\nThe `Security` function (defined in `fastapi/param_functions.py`) allows developers to declare dependencies that include OAuth2 scopes. These scopes are integrated into the OpenAPI specification. Internally, the `Security` class (defined in `fastapi/params.py`) inherits from `Depends`, making it a specialized dependency.\n\nThe system identifies security schemes using `_is_security_scheme` and retrieves them via `_get_security_scheme` in `fastapi/dependencies/models.py`, which checks if a dependency's call is an instance of `SecurityBase`. Furthermore, the `_uses_scopes` function determines if a dependency chain requires OAuth2 scopes by inspecting `dependant.own_oauth_scopes` or `dependant.security_scopes_param_name`. \n\nFinally, the `SecurityScopes` class (defined in `fastapi/security/oauth2.py`) can be used as a dependency parameter to aggregate and access all OAuth2 scopes required across a dependency chain for a specific path operation.\n\nFILES: fastapi/params.py, fastapi/dependencies/models.py, fastapi/param_functions.py, fastapi/security/oauth2.py",
+      "citedFiles": [
+        "fastapi/params.py",
+        "fastapi/dependencies/models.py",
+        "fastapi/param_functions.py",
+        "fastapi/security/oauth2.py"
+      ],
+      "expectedFiles": [
+        "fastapi/security/oauth2.py",
+        "fastapi/dependencies/utils.py",
+        "fastapi/params.py"
+      ],
+      "citationPrecision": 0.5,
+      "citationRecall": 0.6666666666666666,
+      "qualityScore": 3,
+      "judgeRationale": "Mentions Security as a Depends subclass and scope handling but omits the get_dependant processing and runtime solve_dependencies steps described in the reference.",
+      "filesInWindow": [
+        "fastapi/dependencies/models.py",
+        "fastapi/param_functions.py",
+        "fastapi/params.py",
+        "fastapi/security/__init__.py",
+        "fastapi/security/oauth2.py"
+      ]
+    },
+    {
+      "questionId": "a3",
+      "question": "How does FastAPI's security system integrate with its dependency injection system?",
+      "type": "architectural",
+      "strategy": "rerank",
+      "contextTokens": 1014,
+      "promptTokens": 1329,
+      "outputTokens": 273,
+      "costUsd": 0.00074175,
+      "latencyMs": 4094,
+      "answer": "FastAPI integrates security into its dependency injection system primarily through the `Security` class, which inherits from `Depends`. When a `Security` dependency is declared, it allows for the definition of OAuth2 scopes that are integrated into OpenAPI and automatic documentation.\n\nThe integration is managed by the following mechanisms:\n* **Dependency Resolution**: The `get_parameterless_sub_dependant` function in `fastapi/dependencies/utils.py` checks if a dependency is an instance of `params.Security` to extract and store OAuth2 scopes.\n* **Scope Verification**: The `_uses_scopes` function in `fastapi/dependencies/models.py` determines if a `Dependant` requires scopes by checking `own_oauth_scopes`, the presence of a `security_scopes_param_name`, or if the dependency is a security scheme.\n* **Security Schemes**: The `_is_security_scheme` and `_get_security_scheme` functions identify if a dependency's call is an instance of `SecurityBase`, which includes classes like `OAuth2`.\n\nFILES: fastapi/param_functions.py, fastapi/dependencies/utils.py, fastapi/dependencies/models.py, fastapi/params.py, fastapi/security/base.py, fastapi/security/oauth2.py",
+      "citedFiles": [
+        "fastapi/param_functions.py",
+        "fastapi/dependencies/utils.py",
+        "fastapi/dependencies/models.py",
+        "fastapi/params.py",
+        "fastapi/security/base.py",
+        "fastapi/security/oauth2.py"
+      ],
+      "expectedFiles": [
+        "fastapi/security/oauth2.py",
+        "fastapi/dependencies/utils.py",
+        "fastapi/params.py"
+      ],
+      "citationPrecision": 0.5,
+      "citationRecall": 1,
+      "qualityScore": 4,
+      "judgeRationale": "Correctly identifies Security as a Depends subclass and its integration points, but omits key details like solve_dependencies and SecurityScopes handling.",
+      "filesInWindow": [
+        "fastapi/dependencies/models.py",
+        "fastapi/dependencies/utils.py",
+        "fastapi/param_functions.py",
+        "fastapi/params.py",
+        "fastapi/security/base.py",
+        "fastapi/security/oauth2.py"
+      ]
+    },
+    {
+      "questionId": "a3",
+      "question": "How does FastAPI's security system integrate with its dependency injection system?",
+      "type": "architectural",
+      "strategy": "skeleton",
+      "contextTokens": 17906,
+      "promptTokens": 20926,
+      "outputTokens": 255,
+      "costUsd": 0.005614,
+      "latencyMs": 7885,
+      "answer": "FastAPI integrates security with its dependency injection system by using `Security` as a specialized form of `Depends`. \n\nThe `Security` class (defined in `fastapi/params.py`) allows developers to declare dependencies that include OAuth2 scopes. The system identifies security dependencies through the `_is_security_scheme` function in `fastapi/dependencies/models.py`, which checks if a dependency's callable is an instance of `SecurityBase`.\n\nWhen a path operation uses a `Security` dependency, FastAPI tracks the required scopes. The `_uses_scopes` function in `fastapi/dependencies/models.py` recursively determines if a `Dependant` requires scopes, either by having its own `own_oauth_scopes`, containing a `SecurityScopes` parameter, or being a `SecurityBase` instance. \n\nThe `SecurityScopes` class (in `fastapi/security/oauth2.py`) acts as a special parameter that can be injected into dependencies to collect and aggregate all OAuth2 scopes required across the entire dependency chain for a specific request.\n\nFILES: fastapi/params.py, fastapi/dependencies/models.py, fastapi/security/oauth2.py, fastapi/security/base.py",
+      "citedFiles": [
+        "fastapi/params.py",
+        "fastapi/dependencies/models.py",
+        "fastapi/security/oauth2.py",
+        "fastapi/security/base.py"
+      ],
+      "expectedFiles": [
+        "fastapi/security/oauth2.py",
+        "fastapi/dependencies/utils.py",
+        "fastapi/params.py"
+      ],
+      "citationPrecision": 0.5,
+      "citationRecall": 0.6666666666666666,
+      "qualityScore": 5,
+      "judgeRationale": "Accurately describes Security as a Depends subclass, scope accumulation, dependency resolution, and relevant modules/functions.",
+      "filesInWindow": [
+        "fastapi/dependencies/models.py",
+        "fastapi/param_functions.py",
+        "fastapi/params.py",
+        "fastapi/security/__init__.py",
+        "fastapi/security/oauth2.py"
+      ]
+    },
+    {
+      "questionId": "a4",
+      "question": "How does FastAPI isolate itself from differences between Pydantic versions?",
+      "type": "architectural",
+      "strategy": "full-stuff",
+      "contextTokens": 125917,
+      "promptTokens": 126050,
+      "outputTokens": 363,
+      "costUsd": 0.032057,
+      "latencyMs": 10929,
+      "answer": "FastAPI isolates itself from differences between Pydantic versions primarily through the `fastapi/_compat` module. This module acts as a compatibility layer that abstracts version-specific logic and imports.\n\nKey mechanisms include:\n\n*   **`fastapi/_compat/shared.py`**: Contains utility functions that perform version-agnostic checks, such as `lenient_issubclass`, `field_annotation_is_sequence`, and `is_pydantic_v1_model_instance`. These functions often use `typing.get_origin` and `typing.get_args` to inspect type annotations regardless of the underlying Pydantic version.\n*   **`fastapi/_compat/v2.py`**: Specifically handles Pydantic v2 logic. It imports Pydantic v2 components (e.g., `FieldInfo`, `TypeAdapter`, `create_model`) and provides wrappers or re-implementations for functionality that changed between versions, such as `evaluate_forwardref` and `get_schema_from_model_field`.\n*   **`ModelField` class**: Defined in `fastapi/_compat/v2.py`, this class provides a unified interface for field validation and serialization, wrapping Pydantic's `TypeAdapter` to ensure consistent behavior across the framework.\n*   **Conditional Imports**: The codebase uses `try-except` blocks (e.g., in `fastapi/encoders.py` and `fastapi/openapi/models.py`) to handle deprecated or version-specific imports, ensuring the framework remains functional across different Pydantic environments.\n\nFILES: fastapi/_compat/__init__.py, fastapi/_compat/shared.py, fastapi/_compat/v2.py",
+      "citedFiles": [
+        "fastapi/_compat/__init__.py",
+        "fastapi/_compat/shared.py",
+        "fastapi/_compat/v2.py"
+      ],
+      "expectedFiles": [
+        "fastapi/_compat/__init__.py",
+        "fastapi/_compat/shared.py",
+        "fastapi/_compat/v2.py"
+      ],
+      "citationPrecision": 1,
+      "citationRecall": 1,
+      "qualityScore": 3,
+      "judgeRationale": "Mentions the _compat layer and its modules but omits the version‑tuple gating and stable re‑export mechanism described in the reference.",
+      "filesInWindow": [
+        "fastapi/__init__.py",
+        "fastapi/__main__.py",
+        "fastapi/_compat/__init__.py",
+        "fastapi/_compat/shared.py",
+        "fastapi/_compat/v2.py",
+        "fastapi/applications.py",
+        "fastapi/background.py",
+        "fastapi/cli.py",
+        "fastapi/concurrency.py",
+        "fastapi/datastructures.py",
+        "fastapi/dependencies/models.py",
+        "fastapi/dependencies/utils.py",
+        "fastapi/encoders.py",
+        "fastapi/exception_handlers.py",
+        "fastapi/exceptions.py",
+        "fastapi/logger.py",
+        "fastapi/middleware/__init__.py",
+        "fastapi/middleware/asyncexitstack.py",
+        "fastapi/middleware/cors.py",
+        "fastapi/middleware/gzip.py",
+        "fastapi/middleware/httpsredirect.py",
+        "fastapi/middleware/trustedhost.py",
+        "fastapi/middleware/wsgi.py",
+        "fastapi/openapi/constants.py",
+        "fastapi/openapi/docs.py",
+        "fastapi/openapi/models.py",
+        "fastapi/openapi/utils.py",
+        "fastapi/param_functions.py",
+        "fastapi/params.py",
+        "fastapi/requests.py",
+        "fastapi/responses.py",
+        "fastapi/routing.py"
+      ]
+    },
+    {
+      "questionId": "a4",
+      "question": "How does FastAPI isolate itself from differences between Pydantic versions?",
+      "type": "architectural",
+      "strategy": "top-k",
+      "contextTokens": 1378,
+      "promptTokens": 1822,
+      "outputTokens": 293,
+      "costUsd": 0.000895,
+      "latencyMs": 5878,
+      "answer": "FastAPI isolates itself from Pydantic version differences by using a compatibility layer located in the `fastapi/_compat/` directory. This directory contains a `shared.py` module and a `v2.py` module, which are exposed through `fastapi/_compat/__init__.py`.\n\nThe `shared.py` module provides utility functions to detect Pydantic V1 usage, such as `is_pydantic_v1_model_instance`, `is_pydantic_v1_model_class`, and `annotation_is_pydantic_v1`. These functions use `warnings.catch_warnings` to safely attempt to import `pydantic.v1` and check against `v1.BaseModel`.\n\nThe `v2.py` module handles Pydantic V2 integration by importing and re-exporting necessary Pydantic V2 components (e.g., `FieldInfo`, `TypeAdapter`, `create_model`) and defining compatibility aliases like `RequiredParam` and `Undefined` (mapped to `PydanticUndefined`). Additionally, `fastapi/exceptions.py` defines `PydanticV1NotSupportedError` to handle cases where V1 models are no longer supported.\n\nFILES: fastapi/_compat/__init__.py, fastapi/_compat/shared.py, fastapi/_compat/v2.py, fastapi/exceptions.py",
+      "citedFiles": [
+        "fastapi/_compat/__init__.py",
+        "fastapi/_compat/shared.py",
+        "fastapi/_compat/v2.py",
+        "fastapi/exceptions.py"
+      ],
+      "expectedFiles": [
+        "fastapi/_compat/__init__.py",
+        "fastapi/_compat/shared.py",
+        "fastapi/_compat/v2.py"
+      ],
+      "citationPrecision": 0.75,
+      "citationRecall": 1,
+      "qualityScore": 2,
+      "judgeRationale": "Mentions the _compat package but omits the version‑tuple gating mechanism and misstates details, providing only partial correct information.",
+      "filesInWindow": [
+        "fastapi/_compat/__init__.py",
+        "fastapi/_compat/shared.py",
+        "fastapi/_compat/v2.py",
+        "fastapi/exception_handlers.py",
+        "fastapi/exceptions.py"
+      ]
+    },
+    {
+      "questionId": "a4",
+      "question": "How does FastAPI isolate itself from differences between Pydantic versions?",
+      "type": "architectural",
+      "strategy": "rerank",
+      "contextTokens": 1434,
+      "promptTokens": 1883,
+      "outputTokens": 296,
+      "costUsd": 0.00091475,
+      "latencyMs": 6576,
+      "answer": "FastAPI isolates itself from Pydantic version differences by using a compatibility layer located in the `fastapi/_compat` directory. This directory acts as an abstraction layer, exposing consistent interfaces for Pydantic-related operations regardless of the underlying version.\n\nSpecifically, `fastapi/_compat/__init__.py` exports functions and classes from `shared.py` and `v2.py`. \n- `shared.py` contains utility functions like `annotation_is_pydantic_v1`, `is_pydantic_v1_model_instance`, and `is_pydantic_v1_model_class`, which handle version-specific checks (often by attempting to import `pydantic.v1` and suppressing warnings).\n- `v2.py` provides Pydantic v2-compatible implementations for core functionality, such as `create_body_model`, `get_schema_from_model_field`, and `ModelField`. It also maps Pydantic v2 types and constants (e.g., `PydanticUndefined` as `Undefined`) to ensure the rest of the FastAPI codebase interacts with a unified API.\n\nBy importing these abstractions from `fastapi._compat` instead of directly from `pydantic`, FastAPI maintains internal consistency.\n\nFILES: fastapi/_compat/__init__.py, fastapi/_compat/shared.py, fastapi/_compat/v2.py",
+      "citedFiles": [
+        "fastapi/_compat/__init__.py",
+        "fastapi/_compat/shared.py",
+        "fastapi/_compat/v2.py"
+      ],
+      "expectedFiles": [
+        "fastapi/_compat/__init__.py",
+        "fastapi/_compat/shared.py",
+        "fastapi/_compat/v2.py"
+      ],
+      "citationPrecision": 1,
+      "citationRecall": 1,
+      "qualityScore": 4,
+      "judgeRationale": "Correctly identifies the _compat layer and its modules, but omits the version‑parsing logic that gates behavior.",
+      "filesInWindow": [
+        "fastapi/_compat/__init__.py",
+        "fastapi/_compat/shared.py",
+        "fastapi/_compat/v2.py",
+        "fastapi/utils.py"
+      ]
+    },
+    {
+      "questionId": "a4",
+      "question": "How does FastAPI isolate itself from differences between Pydantic versions?",
+      "type": "architectural",
+      "strategy": "skeleton",
+      "contextTokens": 17917,
+      "promptTokens": 21057,
+      "outputTokens": 323,
+      "costUsd": 0.0057487499999999995,
+      "latencyMs": 10317,
+      "answer": "FastAPI isolates itself from Pydantic version differences primarily through the `fastapi/_compat` module, which acts as an abstraction layer. \n\n- **`fastapi/_compat/shared.py`**: Contains utility functions like `is_pydantic_v1_model_instance`, `is_pydantic_v1_model_class`, and `annotation_is_pydantic_v1`. These functions use `warnings.catch_warnings` to safely attempt importing `pydantic.v1` to check for legacy model usage without triggering errors in environments where it is absent.\n- **`fastapi/_compat/v2.py`**: Imports and re-exports Pydantic v2 components (e.g., `BaseModel`, `FieldInfo`, `TypeAdapter`) to provide a consistent interface for the rest of the framework. It also defines a `ModelField` class and various helper functions (e.g., `get_schema_from_model_field`, `create_body_model`) that wrap Pydantic v2 logic.\n- **`fastapi/exceptions.py`**: Defines `PydanticV1NotSupportedError` to explicitly handle cases where unsupported Pydantic v1 models are detected.\n\nBy centralizing these imports and compatibility checks, FastAPI ensures that the core logic remains decoupled from specific Pydantic implementation details.\n\nFILES: fastapi/_compat/__init__.py, fastapi/_compat/shared.py, fastapi/_compat/v2.py, fastapi/exceptions.py",
+      "citedFiles": [
+        "fastapi/_compat/__init__.py",
+        "fastapi/_compat/shared.py",
+        "fastapi/_compat/v2.py",
+        "fastapi/exceptions.py"
+      ],
+      "expectedFiles": [
+        "fastapi/_compat/__init__.py",
+        "fastapi/_compat/shared.py",
+        "fastapi/_compat/v2.py"
+      ],
+      "citationPrecision": 0.75,
+      "citationRecall": 1,
+      "qualityScore": 2,
+      "judgeRationale": "Mentions the _compat layer but omits the version‑tuple gating and misstates some details, so only partially captures the mechanism.",
+      "filesInWindow": [
+        "fastapi/_compat/__init__.py",
+        "fastapi/_compat/shared.py",
+        "fastapi/_compat/v2.py",
+        "fastapi/exception_handlers.py",
+        "fastapi/exceptions.py"
       ]
     }
   ]

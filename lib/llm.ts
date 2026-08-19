@@ -94,7 +94,11 @@ class Pacer {
 }
 
 const geminiPacer = new Pacer(4_000);
-const groqPacer = new Pacer(2_500);
+// Groq's free tier allows 8,000 tokens per minute. A judge call carries roughly
+// 1,500 prompt tokens, so anything faster than ~13s between calls exceeds the
+// token budget rather than the request budget, and every call after the first
+// few 429s.
+const groqPacer = new Pacer(13_000);
 
 /** Answer generation. Same entry point for every strategy. */
 export async function generate(prompt: string, opts: { maxOutputTokens?: number; noCache?: boolean } = {}): Promise<LlmResult> {
@@ -152,7 +156,13 @@ export async function generate(prompt: string, opts: { maxOutputTokens?: number;
 /** Judge calls run on Groq: a different model family from the answerer, so the
  *  judge cannot prefer its own generations. */
 export async function judge(prompt: string, opts: { maxOutputTokens?: number } = {}): Promise<LlmResult> {
-  const maxOutputTokens = opts.maxOutputTokens ?? 512;
+  // gpt-oss-120b is a reasoning model: it spends completion tokens thinking
+  // before it emits anything. At max_tokens 200 the reasoning consumed the whole
+  // budget and 50 of 56 verdicts came back empty or truncated mid-word, which
+  // looked like a parsing bug rather than a truncation one. reasoning_effort
+  // 'low' cuts thinking to ~20 tokens for this task, and the ceiling is raised
+  // so a verdict can never be cut off again.
+  const maxOutputTokens = opts.maxOutputTokens ?? 800;
   const key = hash(`${JUDGE_MODEL}|${maxOutputTokens}|${prompt}`);
   const hit = cacheRead(key);
   if (hit) return hit;
@@ -167,20 +177,30 @@ export async function judge(prompt: string, opts: { maxOutputTokens?: number } =
       fetch('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',
         headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ model: JUDGE_MODEL, messages: [{ role: 'user', content: prompt }], max_tokens: maxOutputTokens, temperature: 0 }),
+        body: JSON.stringify({
+          model: JUDGE_MODEL,
+          messages: [{ role: 'user', content: prompt }],
+          max_tokens: maxOutputTokens,
+          temperature: 0,
+          reasoning_effort: 'low',
+        }),
         signal: AbortSignal.timeout(120_000),
       }),
     );
     const latencyMs = Date.now() - t0;
 
     if (res.ok) {
-      const j = (await res.json()) as { choices?: { message?: { content?: string } }[]; usage?: { prompt_tokens?: number; completion_tokens?: number } };
+      const j = (await res.json()) as {
+        choices?: { message?: { content?: string } }[];
+        usage?: { prompt_tokens?: number; completion_tokens?: number; completion_tokens_details?: { reasoning_tokens?: number } };
+      };
       const result: LlmResult = {
         text: j.choices?.[0]?.message?.content ?? '',
         model: JUDGE_MODEL,
         promptTokens: j.usage?.prompt_tokens ?? 0,
         outputTokens: j.usage?.completion_tokens ?? 0,
-        thoughtTokens: 0,
+        // Groq counts reasoning inside completion_tokens, so cost is already correct.
+        thoughtTokens: j.usage?.completion_tokens_details?.reasoning_tokens ?? 0,
         costUsd: costUsd(JUDGE_MODEL, j.usage?.prompt_tokens ?? 0, j.usage?.completion_tokens ?? 0),
         latencyMs,
         cached: false,

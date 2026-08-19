@@ -1,0 +1,116 @@
+[
+  {
+    "id": "f1",
+    "type": "factual",
+    "question": "What does the jsonable_encoder function do, and what is it used for?",
+    "expectedFiles": ["fastapi/encoders.py"],
+    "expectedAnswer": "jsonable_encoder converts arbitrary Python objects (Pydantic models, dataclasses, datetimes, Decimals, UUIDs, sets, and so on) into values that are JSON-serialisable by the standard library. It walks the object recursively, honours include/exclude, by_alias, exclude_unset/defaults/none options, and falls back to registered per-type encoders. FastAPI uses it before handing response content to a JSONResponse.",
+    "verify": "fastapi/encoders.py:129 jsonable_encoder; :53 isoformat; :59 decimal_encoder; :115 generate_encoders_by_class_tuples"
+  },
+  {
+    "id": "f2",
+    "type": "factual",
+    "question": "What is the BackgroundTasks class and how does it relate to Starlette?",
+    "expectedFiles": ["fastapi/background.py"],
+    "expectedAnswer": "fastapi.background.BackgroundTasks is a thin subclass of starlette.background.BackgroundTasks. It collects callables via add_task, which are run after the response has been sent to the client. FastAPI subclasses it purely to attach richer type annotations and documentation; the execution behaviour comes from Starlette.",
+    "verify": "fastapi/background.py:11 class BackgroundTasks(StarletteBackgroundTasks); :5 import from starlette.background"
+  },
+  {
+    "id": "f3",
+    "type": "factual",
+    "question": "What does OAuth2PasswordRequestForm collect, and how does it differ from OAuth2PasswordRequestFormStrict?",
+    "expectedFiles": ["fastapi/security/oauth2.py"],
+    "expectedAnswer": "OAuth2PasswordRequestForm is a dependency class that collects OAuth2 password-flow form fields: grant_type, username, password, scope, client_id and client_secret. The scope string is split on whitespace into a scopes list. In the non-strict form grant_type is optional; OAuth2PasswordRequestFormStrict requires grant_type to be exactly 'password'.",
+    "verify": "fastapi/security/oauth2.py:14 OAuth2PasswordRequestForm; :162 OAuth2PasswordRequestFormStrict"
+  },
+  {
+    "id": "f4",
+    "type": "factual",
+    "question": "What does get_typed_signature do and why is it needed?",
+    "expectedFiles": ["fastapi/dependencies/utils.py"],
+    "expectedAnswer": "get_typed_signature returns an inspect.Signature for a callable where every parameter annotation has been resolved against the function's own __globals__, via get_typed_annotation. This is needed because annotations may be strings (postponed evaluation / from __future__ import annotations), and FastAPI must have real type objects to build field definitions from.",
+    "verify": "fastapi/dependencies/utils.py:213 get_typed_signature; :230 get_typed_annotation; :198 _get_signature"
+  },
+  {
+    "id": "f5",
+    "type": "factual",
+    "question": "What is the SecurityScopes class for?",
+    "expectedFiles": ["fastapi/security/oauth2.py"],
+    "expectedAnswer": "SecurityScopes is a special dependency-injectable class that exposes the OAuth2 scopes required by every dependency in the same chain. Declaring a SecurityScopes parameter lets a single dependency see the union of scopes declared by all Security() dependencies leading to it. It carries a scopes list and a scope_str joining them with spaces. FastAPI fills it in automatically.",
+    "verify": "fastapi/security/oauth2.py:653 class SecurityScopes"
+  },
+
+  {
+    "id": "x1",
+    "type": "cross-file",
+    "question": "Where is solve_dependencies called from, and what happens to the values it returns?",
+    "expectedFiles": ["fastapi/dependencies/utils.py", "fastapi/routing.py"],
+    "expectedAnswer": "solve_dependencies is defined in fastapi/dependencies/utils.py and called from the request handler built in fastapi/routing.py. It recursively resolves the Dependant tree and returns a SolvedDependency carrying values, errors, background_tasks, response and dependency_cache. routing.py checks errors first and raises a RequestValidationError if any; otherwise it passes solved.values as keyword arguments into run_endpoint_function to invoke the endpoint.",
+    "verify": "fastapi/dependencies/utils.py:586 solve_dependencies; :577 SolvedDependency; fastapi/routing.py:375 get_request_handler; :344 run_endpoint_function"
+  },
+  {
+    "id": "x2",
+    "type": "cross-file",
+    "question": "What is the request_response function in routing.py, and where is its result used?",
+    "expectedFiles": ["fastapi/routing.py"],
+    "expectedAnswer": "request_response is a copy of Starlette's helper, modified to include endpoint context. It wraps a function taking a Request and returning a Response into an ASGI application. APIRoute uses it in its constructor, setting self.app = request_response(self.get_route_handler()), and it is used again when the route handler is rebuilt.",
+    "verify": "fastapi/routing.py:121 request_response; :1223 self.app = request_response(self.get_route_handler()); :1276"
+  },
+  {
+    "id": "x3",
+    "type": "cross-file",
+    "question": "How does a value returned by an endpoint get turned into the response body?",
+    "expectedFiles": ["fastapi/routing.py", "fastapi/encoders.py"],
+    "expectedAnswer": "The request handler in routing.py awaits the endpoint via run_endpoint_function, then calls serialize_response with the route's response field. serialize_response validates the raw value against that field, raising ResponseValidationError on failure, and then passes it through jsonable_encoder in fastapi/encoders.py, honouring by_alias and the exclude_unset/defaults/none flags. The encoded content is finally wrapped in the route's response_class.",
+    "verify": "fastapi/routing.py:301 serialize_response; :727 content = await serialize_response(...); fastapi/encoders.py:129 jsonable_encoder"
+  },
+  {
+    "id": "x4",
+    "type": "cross-file",
+    "question": "What does include_router do when mounting one router onto another, and where is it defined?",
+    "expectedFiles": ["fastapi/routing.py", "fastapi/applications.py"],
+    "expectedAnswer": "include_router is defined on APIRouter in fastapi/routing.py, with a thin delegating wrapper on the FastAPI app in fastapi/applications.py. It iterates the included router's routes and re-registers each on the parent, concatenating prefixes, merging tags, dependencies, responses, callbacks and deprecation flags, and combining the routers' lifespans. Prefixes must start with '/' and must not end with one.",
+    "verify": "fastapi/routing.py:3133 APIRouter.include_router; fastapi/applications.py:1441 FastAPI.include_router"
+  },
+  {
+    "id": "x5",
+    "type": "cross-file",
+    "question": "How does a SecurityScopes parameter in a dependency actually get populated at request time?",
+    "expectedFiles": ["fastapi/dependencies/utils.py", "fastapi/security/oauth2.py"],
+    "expectedAnswer": "When building the Dependant, get_dependant detects a parameter annotated with SecurityScopes and records its name on dependant.security_scopes_param_name rather than treating it as a normal field. At request time solve_dependencies checks that attribute and injects SecurityScopes(scopes=...) into the values dict, using the accumulated scopes from the Security dependencies in the chain. The class itself lives in fastapi/security/oauth2.py.",
+    "verify": "fastapi/dependencies/utils.py:369 security_scopes_param_name assignment; :721 injection in solve_dependencies; fastapi/security/oauth2.py:653 SecurityScopes"
+  },
+
+  {
+    "id": "a1",
+    "type": "architectural",
+    "question": "How do fastapi/routing.py and fastapi/dependencies/utils.py communicate with each other?",
+    "expectedFiles": ["fastapi/routing.py", "fastapi/dependencies/utils.py", "fastapi/dependencies/models.py"],
+    "expectedAnswer": "They communicate through the Dependant model. At route registration routing.py calls get_dependant to build a Dependant tree describing every parameter and sub-dependency of the endpoint. At request time the handler built by get_request_handler calls solve_dependencies with that Dependant, and receives a SolvedDependency of values, errors, background tasks and a response object. The Dependant/SolvedDependency dataclasses in fastapi/dependencies/models.py are the interface between the two modules.",
+    "verify": "fastapi/dependencies/utils.py:27 get_dependant; :586 solve_dependencies; fastapi/routing.py:375 get_request_handler; fastapi/dependencies/models.py Dependant"
+  },
+  {
+    "id": "a2",
+    "type": "architectural",
+    "question": "How is the OpenAPI schema generated and served?",
+    "expectedFiles": ["fastapi/openapi/utils.py", "fastapi/applications.py"],
+    "expectedAnswer": "FastAPI.openapi() in applications.py lazily builds and caches the schema by calling get_openapi in fastapi/openapi/utils.py, passing the app's routes and metadata. get_openapi walks each APIRoute, calling get_openapi_path to produce per-operation parameters, request bodies, responses and security definitions, and collects component schemas from the field definitions. The app registers a route at openapi_url that returns the resulting dict as a JSONResponse, plus docs routes rendering Swagger UI and ReDoc.",
+    "verify": "fastapi/applications.py:1070 FastAPI.openapi; fastapi/openapi/utils.py:620 get_openapi; :311 get_openapi_path; fastapi/openapi/docs.py"
+  },
+  {
+    "id": "a3",
+    "type": "architectural",
+    "question": "How does FastAPI's security system integrate with its dependency injection system?",
+    "expectedFiles": ["fastapi/security/oauth2.py", "fastapi/dependencies/utils.py", "fastapi/params.py"],
+    "expectedAnswer": "Security schemes are ordinary callable dependencies. Security() in fastapi/params.py is a Depends subclass that additionally carries scopes. When get_dependant walks parameters it treats a Security marker as a dependency whose declared scopes are accumulated down the chain, recording security requirements on the Dependant. At request time solve_dependencies resolves the scheme callable like any dependency, which reads the relevant header or cookie and either returns credentials or raises HTTPException. The accumulated scopes are exposed through SecurityScopes, and the same requirements are reused to build OpenAPI security definitions.",
+    "verify": "fastapi/params.py:752 Security(Depends); fastapi/dependencies/utils.py:369, :721; fastapi/security/oauth2.py:330 OAuth2, :433 OAuth2PasswordBearer"
+  },
+  {
+    "id": "a4",
+    "type": "architectural",
+    "question": "How does FastAPI isolate itself from differences between Pydantic versions?",
+    "expectedFiles": ["fastapi/_compat/__init__.py", "fastapi/_compat/shared.py", "fastapi/_compat/v2.py"],
+    "expectedAnswer": "All Pydantic-version-specific behaviour is confined to the fastapi/_compat package. shared.py reads pydantic.version.VERSION and derives PYDANTIC_VERSION_MINOR_TUPLE, which gates behaviour that differs between minor releases. v2.py holds the Pydantic v2 implementations of field construction, validation and schema generation, and _compat/__init__.py re-exports a single stable surface. The rest of FastAPI imports only from fastapi._compat, so routing, dependencies and openapi code never branch on Pydantic version directly.",
+    "verify": "fastapi/_compat/shared.py:19 PYDANTIC_VERSION import; :31 PYDANTIC_VERSION_MINOR_TUPLE; fastapi/_compat/v2.py:147 version gate; fastapi/_compat/__init__.py re-exports"
+  }
+]
