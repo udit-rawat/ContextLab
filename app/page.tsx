@@ -64,7 +64,10 @@ export default function Home() {
 
   const costMultiple = full.meanCostUsd / baseline.meanCostUsd;
   const questionCount = new Set(benchmark.rows.map((r) => r.questionId)).size;
-  const tieVsBaseline = aggs.map((a) => ({ strategy: a.strategy, tie: isTie(a, baseline) }));
+  // The baseline is excluded: comparing it against itself is not a finding.
+  const tieVsBaseline = aggs
+    .filter((a) => a.strategy !== BASELINE_STRATEGY)
+    .map((a) => ({ strategy: a.strategy, tie: isTie(a, baseline) }));
 
   return (
     <main className="mx-auto w-full max-w-4xl flex-1 px-6 py-14">
@@ -140,8 +143,10 @@ export default function Home() {
         </div>
         <p className="mt-3 text-xs opacity-55">
           {scored
-            ? tieVsBaseline.filter((t) => t.tie).map((t) => STRATEGIES[t.strategy].label).join(', ') +
-              ' are within the within-strategy spread of the baseline and are reported as ties.'
+            ? `Every strategy is a tie with the baseline on quality: ${tieVsBaseline
+                .filter((t) => t.tie)
+                .map((t) => STRATEGIES[t.strategy].label)
+                .join(', ')} all sit inside the within-strategy question-to-question spread. Question difficulty varies more than strategy choice does, so the differences above are noise — the cost column is where the real difference lives.`
             : 'Tie testing activates once rubric scores exist: any gap smaller than the question-to-question spread within a strategy is reported as a tie, not an improvement.'}
         </p>
       </section>

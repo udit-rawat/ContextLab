@@ -12,7 +12,10 @@
     "verify-parser": "tsx scripts/verify-parser.ts",
     "stats": "tsx scripts/corpus-stats.ts",
     "index": "tsx scripts/build-index.ts",
-    "search": "tsx scripts/search.ts"
+    "search": "tsx scripts/search.ts",
+    "fullstuff": "tsx scripts/build-fullstuff.ts",
+    "bench": "tsx scripts/run-benchmark.ts --questions eval/questions.json",
+    "analyze": "tsx scripts/analyze.ts"
   },
   "dependencies": {
     "gpt-tokenizer": "^4.0.0",
