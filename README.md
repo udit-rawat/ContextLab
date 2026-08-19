@@ -12,6 +12,8 @@ Superbrain's central claim is a 60 to 80 percent token reduction with no loss of
 
 I picked this over a quiz app or a game for a few reasons. It engages with the actual technical claim rather than the marketing page. It runs on retrieval, evals and token economics rather than making me compete on generic full-stack polish. And it is adjacent rather than competitive — I am not rebuilding anyone's moat in a day, I am building the instrument that measures it.
 
+**What this is not.** I did not test Superbrain's context engine as a black box, and nothing here is a measurement of their product. I built my own four strategies and measured those. Where I do talk about Superbrain below, it is from reading the artifact it wrote into my repo, which I say explicitly.
+
 The short version of what I found: **the achievable token reduction on my corpus is 97.9%, which is well above the claim. But none of the four strategies differ from each other on answer quality by more than noise.** The interesting result is not which strategy wins. It is that question difficulty varies about four times more than strategy choice does, so the honest answer is "tie", and the real decision is cost.
 
 ---
@@ -84,7 +86,7 @@ The uncomfortable part: structure-aware compression is the strategy specifically
 1. **Full stuffing** — concatenate whole files in path order until the 128k cap, truncate the rest. The naive baseline. Not a straw man for the cost ceiling, but genuinely what "just give the model everything" costs.
 2. **Top-8 vector** — embed chunks, cosine similarity, take the top 8. This is what most people actually build, so **this is the fair baseline and every improvement is measured against it**, not against full stuffing.
 3. **Retrieve wide then rerank** — pull 30 candidates, rerank down to 8 with one extra model call.
-4. **Structure-aware compression** — always include a compressed repo skeleton (file tree plus signatures and docstrings, no bodies), then add full bodies only for retrieved chunks. This is the closest analogue to what a context engine claims to do, which is exactly why it belongs in the comparison rather than being assumed to win.
+4. **Structure-aware compression** — always include a compressed repo skeleton (file tree plus signatures and docstrings, no bodies), then add full bodies only for retrieved chunks. I originally built this as my guess at what a context engine does. Having since read Superbrain's actual manifest, that guess was wrong — see below — but the strategy is still worth measuring on its own terms, and it is the only one of the four that tries to buy breadth cheaply.
 
 ---
 
@@ -180,6 +182,54 @@ Every question carries an `expectedFiles` list, a reference answer, and a **`ver
 
 ---
 
+## Understanding the product
+
+I installed Superbrain and looked at what it actually is, because the assignment asks how the three components interact and I would rather answer that from evidence than from the landing page.
+
+- **IDE**: a VS Code fork, `Superbrain IDE 1.121.0-beta`.
+- **Agent**: `anthropic.claude-code` version 2.1.235, installed from the marketplace. It is the only extension present, and it is unmodified. The default model in `settings.json` was `claude-opus-4-8`.
+- **Context engine**: a file it writes at `.superbrain/manifest.md`.
+
+That manifest is the interesting part, so I measured it against my own artifacts:
+
+| | Tokens | What it contains |
+|---|---|---|
+| Superbrain `manifest.md` | **1,549** | 93 file paths, sizes, and a `[source]`/`[config]`/`[docs]` tag |
+| My structure-aware skeleton | 16,517 | signatures and docstrings for 48 files |
+| Full FastAPI corpus | 183,648 | everything |
+
+For a 5.1 MB, 93 file project the whole manifest is 1,549 tokens. It contains **zero symbols, zero signatures, zero docstrings and no import or call graph**. It is a file inventory.
+
+I want to be fair about this, because "it is just a file listing" is the cheap read and I do not think it is the right one. Priming an agent with a map of what exists is a genuinely sensible minimum: it is almost free, it survives any model, and it should measurably cut the blind searching that agents otherwise do. When I asked Claude Code a question about this repo without a manifest, its first action was a `grep` that failed on a bad flag, then a retry, then a `sed` — three tool calls to find one function. A manifest plausibly removes most of that flailing, and their published benchmark (64% fewer tokens, 7 bugs fixed against Claude Code's 8, which they themselves call "too close to call at ten issues") is consistent with exactly that mechanism.
+
+It also means my Strategy 4 was never a reconstruction of their approach. My skeleton is **10.7x richer** than what they ship. Their approach is closer to "manifest plus agentic on-demand reads", which is a fifth strategy my benchmark does not measure — and in hindsight is the one I would most want to add.
+
+## 3A. What I would change or add next
+
+**Put symbols in the manifest.** This is the one change I would make first, and my own numbers are the argument for it.
+
+The manifest tells an agent which files exist. It does not tell it what is inside any of them. So for any question that names a symbol rather than a file — "where is `solve_dependencies` called from" — the manifest cannot help, and the agent is back to searching blind. That is precisely the category where my benchmark shows thin context failing: on architectural questions, top-8 retrieval scored **2.75** while full context scored **4.25**. Breadth matters exactly where a path-only index has nothing to offer.
+
+A signature-only manifest is cheap. My skeleton costs 16,517 tokens for 48 Python files, and that number is inflated by FastAPI documenting inside its type annotations; compacted to structure only it was 10.8% of the corpus. For a 93 file project, a signatures-only index should land under 10k tokens — a rounding error against a 200k window, and it turns "which files exist" into "which files contain what".
+
+**Second: show the user what is in the window.** The compression is the product, and it is currently invisible. I could not tell, at any point, what the engine had decided was relevant, which means when it guesses wrong the user has no idea why the answer is bad or what to correct. The "what made it into the window" view on this site is my sketch of what that could look like — which files entered context versus the repo total. For a product whose entire pitch is context selection, making that legible seems like the highest-value UI work available.
+
+**Third: benchmark the agentic strategy honestly.** Their published comparison is Superbrain against Claude Code, but Superbrain *runs* Claude Code. So the comparison is really "Claude Code with a manifest" against "Claude Code without one", which is a clean and interesting experiment — and I think saying so plainly would make the benchmark more credible, not less. Attributing the 64% to a manifest is a stronger claim than attributing it to an unspecified proprietary engine, because it is falsifiable.
+
+## 3B. UI and product issues
+
+These are all first-run experience, all reproducible, and all things I hit inside the first hour.
+
+**1. Extension install fails with "invalid signature".** Installing the Claude Code extension surfaced a signature validation error. In a VS Code fork this usually means marketplace signing is not fully wired through. It blocks setup, which is the worst possible place for a bug.
+
+**2. The sign-in popup exposed a raw backend IP address and full internal domain.** I am describing this as information disclosure rather than a vulnerability, because I did not test whether anything is exploitable and I am not going to claim impact I cannot demonstrate. But an auth flow showing a bare IP suggests the endpoint is not behind a domain or proxy, and it hands out infrastructure detail for free. Normally I would report this privately rather than write it in a submission document; I am including it because the assignment asked what I disliked, and it was the most serious thing I saw.
+
+**3. The rate limit error contradicts the error it is wrapping.** The UI said *"Your Gemini API quota is exhausted for this model — retrying won't help. Enable billing on your key."* The underlying API error, in the same message, said *"Please retry in 23.823293474s"* — a per-minute limit of 5 requests, not an exhausted quota. So the product told me to go enable billing when I needed to wait half a minute. A user who trusts that message either pays or leaves.
+
+**4. The model list offers models that no longer exist.** Selecting `gemini-2.5-flash` returned "This model is no longer available to new users." I hit the identical error independently while pinning models for this project, so it is Google deprecating access rather than anything Superbrain did wrong — but the model picker is offering choices it cannot fulfil, and the user finds out by failing.
+
+The through-line is that every one of these is a **setup-time** problem. The product's actual value proposition — context compression — I never got to evaluate properly, because I spent my hour on signature errors, quota messages and dead models. For a tool competing against `npm install`-grade onboarding, that first hour is the whole battle.
+
 ## Limitations, honestly
 
 - **14 questions is not many.** With a within-strategy SD of ~1.3, this design can only detect quality differences of roughly 1 point. Smaller real differences would be invisible. Separating these strategies would need substantially more questions, or harder ones.
@@ -200,7 +250,9 @@ Every question carries an `expectedFiles` list, a reference answer, and a **`ver
 
 ---
 
-## What I would build next
+## What I would build next in the harness itself
+
+*(3A above is about Superbrain. This is about ContextLab.)*
 
 **More questions, targeted at the disagreement.** The single most valuable next step is not a new strategy, it is 50-100 questions so the eval can actually resolve differences below 1 rubric point. Right now the harness is measuring question difficulty more than it is measuring strategy.
 

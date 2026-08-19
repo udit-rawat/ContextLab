@@ -9,6 +9,7 @@
  *   npx tsx scripts/verify-doc.ts
  */
 import { readFileSync } from 'node:fs';
+import { encode } from 'gpt-tokenizer';
 import { aggregate, isTie, paretoFrontier, type Benchmark } from '../lib/results';
 import type { StrategyId } from '../config/models';
 
@@ -79,6 +80,18 @@ console.log('\nby-question-type table');
 for (const t of ['factual', 'cross-file', 'architectural'] as const) {
   const rows = b.rows.filter((r) => r.type === t);
   for (const s of O) has(`${t}/${s}`, aggregate(rows, s).meanQuality!.toFixed(2));
+}
+
+console.log('\nsuperbrain manifest claims');
+{
+  const man = readFileSync('.superbrain/manifest.md', 'utf8');
+  const manTokens = encode(man).length;
+  has('manifest token count', manTokens.toLocaleString());
+  const ratio = skel.tokens / manTokens;
+  has('skeleton/manifest ratio', `${ratio.toFixed(1)}x`);
+  check('manifest really has no symbols', 'def/class count', !/\bdef \w|\bclass \w/.test(man));
+  const files = (man.match(/\[(source|config|docs|style|other)\]/g) ?? []).length;
+  has('manifest file count', `${files} file paths`);
 }
 
 console.log('\nworst cases named in the doc');
