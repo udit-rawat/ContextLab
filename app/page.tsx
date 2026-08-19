@@ -78,6 +78,14 @@ export default function Home() {
           the harness that measures a claim like that: one question, four context strategies, real
           token counts from the provider&rsquo;s own tokenizer, real cost, scored answers.
         </p>
+        <p className="mt-2 max-w-2xl text-sm opacity-55">
+          I did not test Superbrain&rsquo;s context engine as a black box &mdash; I built and measured
+          four strategies of my own.{' '}
+          <a href="https://github.com/udit-rawat/ContextLab" className="underline underline-offset-2 hover:opacity-100">
+            Source, methodology and decisions
+          </a>
+          .
+        </p>
       </header>
 
       <dl className="mt-10 grid grid-cols-2 gap-6 sm:grid-cols-4">
@@ -196,6 +204,12 @@ export default function Home() {
           Benchmark run {new Date(benchmark.generatedAt).toISOString().slice(0, 16).replace('T', ' ')} UTC.
           Costs are published list prices applied to measured token counts; the run itself executed on
           free tier. Token counts come from the provider&rsquo;s usage metadata, not an estimate.
+        </p>
+        <p className="mt-5 text-xs opacity-55">
+          <a href="https://github.com/udit-rawat/ContextLab" className="underline underline-offset-2 hover:opacity-100">
+            github.com/udit-rawat/ContextLab
+          </a>{' '}
+          &mdash; full writeup, architecture decisions, and the Superbrain product notes live there.
         </p>
       </section>
     </main>
