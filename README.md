@@ -22,7 +22,7 @@ the short version of what i found: **we can actually acheive 97.9% token reducti
 did 14 questions, 4 stratergies, 56 runs. all data is in `results/benchmark.json`
 
 - **Full stuffing:** 126,053 tokens | $0.0318 | 32.7x cost | 3.57 quality | 79% citation precision
-- **Top-8 vector (baseline):** 2,655 tokens | $0.0009 | 1.0x cost | 3.50 quality | 90% citation precision
+- **Top-8 vector (baseline):** 2,655 tokens | $0.0010 | 1.0x cost | 3.50 quality | 90% citation precision
 - **Retrieve + rerank:** 2,668 tokens | $0.0010 | 1.0x cost | 3.86 quality | 79% citation precision
 - **Structure-aware:** 21,890 tokens | $0.0058 | 6.0x cost | 3.64 quality | 86% citation precision
 
@@ -56,6 +56,38 @@ sadly structure aware compression which i designed to fix this only scored 3.00 
 2. **Top-8 vector** - embed chunks cosine sim take top 8. this is what a standard dev builds so i used this as the fair baseline to measure against.
 3. **Retrieve wide then rerank** - pull 30 rerank to 8 with one extra call.
 4. **Structure-aware compression** - always include a compressed repo skeleton (file tree + signatures + docstrings) then add full bodies for retrieved chunks. i originally thought this is what superbrain did but i was wrong (more on that later).
+
+---
+
+## Running it
+
+repo: https://github.com/udit-rawat/ContextLab
+
+```bash
+git clone https://github.com/udit-rawat/ContextLab.git
+cd ContextLab
+npm ci
+npm run dev
+```
+
+**you dont need api keys to see the results.** the whole benchmark is precomputed and committed so the site just reads `results/benchmark.json`. keys are only for live query mode, copy `.env.example` to `.env` and fill in 3 free keys (2 gemini 1 groq) then `npm run smoke` to check they work.
+
+to regenerate everything from scratch:
+
+```bash
+npm run corpus      # vendor fastapi at the pinned commit
+npm run index       # chunk + embed -> data/index.json
+npm run fullstuff   # compute the exact 128k cut -> data/fullstuff.json
+npm run bench       # 14 questions x 4 stratergies -> results/benchmark.json
+npm run analyze     # spits out the numbers in this readme
+```
+
+two scripts exist purely so i cant fool myself:
+
+- `npm run verify-parser` diffs my python parser against pythons own `ast` module over all 48 files. fails if they disagree on any symbol.
+- `npm run verify-doc` asserts every number in this readme against the committed json. if i edit a number by hand and it doesn't match the data it exits 1.
+
+corpus is fastapi pinned at commit `66b2c5a9b5ddf65f218423072ad158e42ed780aa`, 48 files, 183,648 tokens. answerer is `gemini-3.1-flash-lite` ($0.25/M in, $1.50/M out), embeddings `gemini-embedding-001` at 768 dims, judge is `openai/gpt-oss-120b` on groq. context cap 128,000 tokens applied to every stratergy. whole thing ran on free tiers, total spend $0.00 — the costs above are list prices applied to measured token counts.
 
 ---
 

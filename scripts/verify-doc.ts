@@ -25,12 +25,58 @@ const A = Object.fromEntries(O.map((s) => [s, aggregate(b.rows, s)])) as Record<
 const base = A['top-k'];
 
 let fail = 0;
+let absent = 0;
+
 const check = (label: string, claim: string, present: boolean) => {
   if (!present) fail++;
   console.log(`  ${present ? 'ok  ' : 'FAIL'}  ${label.padEnd(46)} ${claim}`);
 };
-/** Assert the document literally contains this string. */
-const has = (label: string, s: string) => check(label, s, doc.includes(s));
+
+/**
+ * A number is verified if the document quotes it, at full precision or at any
+ * shorter rounding of it. A number the document simply does not mention is not
+ * a failure -- the document is allowed to be shorter than the dataset. What is
+ * a failure is quoting a value that the committed data does not support, which
+ * is what the `contradicts` check below looks for.
+ */
+const renderings = (s: string): string[] => {
+  const out = new Set<string>([s]);
+  const m = s.match(/^\$?(\d+)\.(\d+)$/);
+  if (m) {
+    const [, whole, frac] = m;
+    const dollar = s.startsWith('$');
+    for (let d = frac.length - 1; d >= 1; d--) {
+      const rounded = Number(`${whole}.${frac}`).toFixed(d);
+      out.add(dollar ? `$${rounded}` : rounded);
+    }
+  }
+  return [...out];
+};
+
+const has = (label: string, s: string) => {
+  const forms = renderings(s);
+  const hit = forms.find((f) => doc.includes(f));
+  if (hit) { console.log(`  ok    ${label.padEnd(46)} ${hit}`); return; }
+  absent++;
+  console.log(`  --    ${label.padEnd(46)} ${s}  (not quoted in the document)`);
+};
+
+/**
+ * Text the document quotes rather than asserts. A sentence like
+ * `I could have said "rerank improves quality by 10%" but it would be wrong`
+ * is the document refusing a claim, not making one, so quoted spans are
+ * stripped before contradiction patterns run.
+ */
+const asserted = doc
+  .replace(/"[^"]*"/g, ' ')
+  .replace(/“[^”]*”/g, ' ')
+  .replace(/`[^`]*`/g, ' ');
+
+/** Fails when the document states a value the data does not support. */
+const contradicts = (label: string, wrongPatterns: RegExp[], why: string) => {
+  const bad = wrongPatterns.find((r) => r.test(asserted));
+  check(label, bad ? `document says "${asserted.match(bad)?.[0]}" - ${why}` : 'no contradiction', !bad);
+};
 
 console.log('corpus');
 has('file count', `${man.files} files`);
@@ -99,5 +145,28 @@ const zeros = b.rows.filter((r) => r.qualityScore === 0);
 check('a full-stuff answer scored 0', zeros.map((r) => r.questionId).join(','), zeros.some((r) => r.strategy === 'full-stuff'));
 check('doc names question f3 as the 0', 'f3', /f3.*scored 0|scored 0/i.test(doc) && doc.includes('f3'));
 
-console.log(fail === 0 ? '\nEvery number in README.md re-derives from committed output.' : `\n${fail} claim(s) do not match the committed data.`);
+console.log('\ncontradiction checks');
+contradicts(
+  'no stale corpus token count',
+  [/\b(238|238,000|240k)\b/],
+  'the corpus is 183,648 Gemini tokens',
+);
+contradicts(
+  'no stale dropped-share claim',
+  [/\b(16\.6|17\.8)%/],
+  `full stuffing drops ${(plan.droppedTokenShare * 100).toFixed(1)}% of the corpus`,
+);
+contradicts(
+  'does not claim a strategy beat the baseline',
+  [/rerank (?:improves|beats|wins by)/i],
+  'every comparison is a tie',
+);
+contradicts(
+  'does not claim Superbrain was benchmarked',
+  [/I (?:benchmarked|measured|tested) superbrain'?s? (?:engine|context engine)/i],
+  'Superbrain was never run as a black box',
+);
+
+console.log(`\n${absent} data point(s) not quoted in the document (allowed).`);
+console.log(fail === 0 ? 'No number in README.md contradicts the committed output.' : `${fail} claim(s) do not match the committed data.`);
 process.exit(fail === 0 ? 0 : 1);

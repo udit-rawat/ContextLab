@@ -15,7 +15,8 @@
     "search": "tsx scripts/search.ts",
     "fullstuff": "tsx scripts/build-fullstuff.ts",
     "bench": "tsx scripts/run-benchmark.ts --questions eval/questions.json",
-    "analyze": "tsx scripts/analyze.ts"
+    "analyze": "tsx scripts/analyze.ts",
+    "verify-doc": "tsx scripts/verify-doc.ts"
   },
   "dependencies": {
     "gpt-tokenizer": "^4.0.0",
