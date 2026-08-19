@@ -91,6 +91,8 @@ two scripts exist purely so i cant fool myself:
 
 corpus is fastapi pinned at commit `66b2c5a9b5ddf65f218423072ad158e42ed780aa`, 48 files, 183,648 tokens. answerer is `gemini-3.1-flash-lite` ($0.25/M in, $1.50/M out), embeddings `gemini-embedding-001` at 768 dims, judge is `openai/gpt-oss-120b` on groq. context cap 128,000 tokens applied to every strategy. whole thing ran on free tiers, total spend $0.00 — the costs above are list prices applied to measured token counts.
 
+this is only benchmarked on fastapi but its not hardcoded to it. swap the `CORPUS` block in `config/models.ts` to any python repo + commit and re-run the pipeline above, it'll rebuild the index and skeleton for that repo. two catches though - `lib/python.ts` only parses python so a ts/go repo needs a different structural parser, and `eval/questions.json` is fastapi-specific so a new corpus needs its own golden set before the numbers mean anything.
+
 ---
 
 ## Architecture decisions and what i rejected
